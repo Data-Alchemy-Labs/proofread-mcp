@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createClient, verifyPath } from "../src/client.js";
+import { anySignal, createClient, verifyPath } from "../src/client.js";
 import { ProofreadError } from "../src/errors.js";
 import { error402, error429, mockFetch, sampleReport, sseBody } from "./helpers.js";
 
@@ -80,6 +80,26 @@ describe("verifyText", () => {
     expect(err.message).toContain("fetch failed");
   });
 
+  it("a timeout is reported as a timeout, a client cancel as cancelled, not as unreachable", async () => {
+    const timeout = mockFetch({ throws: new DOMException("The operation was aborted due to timeout", "TimeoutError") });
+    const t = await createClient(cfg, timeout.fetch).verifyText("x").catch((e) => e);
+    expect(t.code).toBe("timeout");
+    expect(t.message).toContain("no answer from https://api.test in time");
+    const abort = mockFetch({ throws: new DOMException("This operation was aborted", "AbortError") });
+    const a = await createClient(cfg, abort.fetch).verifyText("x").catch((e) => e);
+    expect(a.code).toBe("cancelled");
+  });
+
+  it("passes a combined signal (caller + timeout) to fetch", async () => {
+    const { fetch, calls } = mockFetch({ body: sampleReport() });
+    const controller = new AbortController();
+    await createClient(cfg, fetch).verifyText("x", { signal: controller.signal });
+    const signal = calls[0]!.init.signal as AbortSignal;
+    expect(signal.aborted).toBe(false);
+    controller.abort(new Error("stop"));
+    expect(signal.aborted).toBe(true);
+  });
+
   it("gives a generic code when the error body is not the envelope", async () => {
     const { fetch } = mockFetch({ status: 502, text: "bad gateway", headers: { "content-type": "text/html" } });
     const err = await createClient(cfg, fetch).verifyText("x").catch((e) => e);
@@ -126,5 +146,28 @@ describe("resolveCitation, renderMarkdown, coverage", () => {
     expect(await createClient(cfg, fetch).coverage()).toEqual({ coverage: "C", storage: "S" });
     expect(calls[0]?.url).toBe("https://api.test/api/coverage");
     expect(calls[0]?.init.method).toBe("GET");
+  });
+});
+
+describe("anySignal", () => {
+  it("aborts when any input aborts, with that reason, with and without AbortSignal.any", () => {
+    const native = AbortSignal.any;
+    for (const withNative of [true, false]) {
+      if (!withNative) Object.defineProperty(AbortSignal, "any", { value: undefined, configurable: true });
+      try {
+        const a = new AbortController();
+        const b = new AbortController();
+        const combined = anySignal([a.signal, b.signal]);
+        expect(combined.aborted).toBe(false);
+        b.abort("because");
+        expect(combined.aborted).toBe(true);
+        expect(combined.reason).toBe("because");
+        const already = new AbortController();
+        already.abort("early");
+        expect(anySignal([already.signal, new AbortController().signal]).reason).toBe("early");
+      } finally {
+        Object.defineProperty(AbortSignal, "any", { value: native, configurable: true });
+      }
+    }
   });
 });

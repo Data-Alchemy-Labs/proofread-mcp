@@ -2,6 +2,7 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { INSTRUCTIONS } from "../src/server.js";
 import { connectedClient, error402, error429, sampleReport, sseBody, textOf } from "./helpers.js";
 
 type Connected = Awaited<ReturnType<typeof connectedClient>>;
@@ -25,7 +26,12 @@ describe("tools/list", () => {
     const check = tools.find((t) => t.name === "check_citations")!;
     expect(check.description).toContain("Westlaw");
     expect(check.description).toContain("statutes");
-    expect(check.description?.toLowerCase()).not.toMatch(/fabricat|fake/);
+    for (const t of tools) expect(t.description?.toLowerCase()).not.toMatch(/fabricat|fake/);
+  });
+
+  it("the server instructions follow the wording rule too", () => {
+    expect(INSTRUCTIONS.toLowerCase()).not.toMatch(/fabricat|fake/);
+    expect(INSTRUCTIONS).toContain("coverage statement");
   });
 });
 
@@ -181,7 +187,9 @@ describe("coverage", () => {
   it("402, 429 and network errors surface", async () => {
     session = await connectedClient({ status: 402, body: error402 }, { status: 429, body: error429 }, network);
     const call = () => session!.mcp.callTool({ name: "coverage", arguments: {} });
-    expect((await call()).isError).toBe(true);
+    const first = await call();
+    expect(first.isError).toBe(true);
+    expect(textOf(first)).toContain("needs the solo plan");
     expect(textOf(await call())).toContain("rate limit");
     expect(textOf(await call())).toContain("Could not reach");
   });

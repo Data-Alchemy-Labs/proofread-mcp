@@ -16,9 +16,8 @@ export interface HttpOptions extends ServerOptions {
  */
 export function startHttp(options: HttpOptions): Promise<{ close(): Promise<void>; url: string }> {
   const host = options.host ?? "127.0.0.1";
-  const loopback = host === "127.0.0.1" || host === "localhost" || host === "::1";
-  // With port 0 the OS picks the port; DNS-rebinding protection then needs the hosts passed in explicitly.
-  const allowedHosts = options.allowedHosts ?? (loopback && options.port > 0 ? [`127.0.0.1:${options.port}`, `localhost:${options.port}`, "127.0.0.1", "localhost"] : undefined);
+  let port = options.port; // replaced by the bound port once listening (port 0 lets the OS pick)
+  const allowedHosts = (): string[] | undefined => options.allowedHosts ?? loopbackHosts(host, port);
   const sessions = new Map<string, StreamableHTTPServerTransport>();
 
   async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -41,6 +40,7 @@ export function startHttp(options: HttpOptions): Promise<{ close(): Promise<void
       res.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "no session; POST initialize first" }, id: null }));
       return;
     }
+    const hosts = allowedHosts();
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
       onsessioninitialized: (id) => {
@@ -49,7 +49,7 @@ export function startHttp(options: HttpOptions): Promise<{ close(): Promise<void
       onsessionclosed: (id) => {
         sessions.delete(id);
       },
-      ...(allowedHosts ? { allowedHosts, enableDnsRebindingProtection: true } : {}),
+      ...(hosts ? { allowedHosts: hosts, enableDnsRebindingProtection: true } : {}),
     });
     transport.onclose = () => {
       if (transport.sessionId) sessions.delete(transport.sessionId);
@@ -71,7 +71,7 @@ export function startHttp(options: HttpOptions): Promise<{ close(): Promise<void
     httpServer.once("error", reject);
     httpServer.listen(options.port, host, () => {
       const address = httpServer.address();
-      const port = typeof address === "object" && address ? address.port : options.port;
+      if (typeof address === "object" && address) port = address.port;
       resolve({
         url: `http://${host}:${port}/mcp`,
         close: async () => {
@@ -81,4 +81,11 @@ export function startHttp(options: HttpOptions): Promise<{ close(): Promise<void
       });
     });
   });
+}
+
+/** The Host header values a loopback bind should accept; undefined (no protection) when bound to a real interface. */
+export function loopbackHosts(host: string, port: number): string[] | undefined {
+  if (host === "127.0.0.1" || host === "localhost") return [`127.0.0.1:${port}`, `localhost:${port}`, "127.0.0.1", "localhost"];
+  if (host === "::1") return [`[::1]:${port}`, `localhost:${port}`, "[::1]", "localhost"];
+  return undefined;
 }

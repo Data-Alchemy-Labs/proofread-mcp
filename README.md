@@ -31,6 +31,8 @@ What it cannot do: resolve Westlaw (WL) or Lexis identifiers, check statutes, re
 
 Needs Node 20 or newer. No install step is required; `npx` fetches it.
 
+Until the package is on npm, clone this repository, run `npm install && npm run build`, and use `node /absolute/path/to/proofread-mcp/dist/cli.js` wherever the snippets below say `npx -y proofread-mcp`.
+
 ### Claude Desktop
 
 Edit `claude_desktop_config.json` (Settings, Developer, Edit Config):
@@ -136,7 +138,7 @@ Every result starts with the coverage statement, for example:
 
 > Checked against 10.1 M cases (CourtListener bulk data 2026-06-30, last refreshed 2026-09-19); federal appellate 2019 to 2023 is 10 to 15% incomplete; Westlaw/Lexis identifiers are not resolvable; statutes, regulations and secondary sources are not checked.
 
-Read it. A citation that is not in the register is a register fact with a coverage qualifier, not proof that the case does not exist. A red row says "check this". The tools never say "fabricated".
+Read it. A citation that is not in the register is a register fact with a coverage qualifier, not proof that the case does not exist. A red row says "check this"; the tools say what was checked and what was found, never that a case is invented.
 
 ## Example
 

@@ -1,8 +1,9 @@
+import { request } from "node:http";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { createClient } from "../src/client.js";
-import { startHttp } from "../src/http.js";
+import { loopbackHosts, startHttp } from "../src/http.js";
 import { mockFetch, sampleReport, textOf } from "./helpers.js";
 
 describe("Streamable HTTP transport", () => {
@@ -42,6 +43,26 @@ describe("Streamable HTTP transport", () => {
     expect(health.sessions).toBe(1);
     await transport.terminateSession();
     await mcp.close();
+  });
+
+  it("rejects a foreign Host header (DNS rebinding) even on an OS-picked port", async () => {
+    // fetch drops a custom Host header, so this goes through node:http.
+    const { port } = new URL(server.url);
+    const body = JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "x", version: "0" } } });
+    const status = await new Promise<number>((resolve, reject) => {
+      const req = request({ host: "127.0.0.1", port, path: "/mcp", method: "POST",
+        headers: { host: "evil.example:80", "content-type": "application/json", accept: "application/json, text/event-stream", "content-length": Buffer.byteLength(body) } },
+        (res) => { res.resume(); resolve(res.statusCode ?? 0); });
+      req.on("error", reject);
+      req.end(body);
+    });
+    expect(status).toBe(403);
+  });
+
+  it("loopbackHosts covers IPv4, IPv6 and names; nothing for a real interface", () => {
+    expect(loopbackHosts("127.0.0.1", 3333)).toEqual(["127.0.0.1:3333", "localhost:3333", "127.0.0.1", "localhost"]);
+    expect(loopbackHosts("::1", 3333)).toEqual(["[::1]:3333", "localhost:3333", "[::1]", "localhost"]);
+    expect(loopbackHosts("0.0.0.0", 3333)).toBeUndefined();
   });
 
   it("404 elsewhere", async () => {

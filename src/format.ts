@@ -1,6 +1,6 @@
 import type { Report, Row, Tier } from "./types.js";
 
-/** The words a user sees per tier (PRODUCT.md). Never "fabricated", never "fake". */
+/** The words a user sees per tier (PRODUCT.md): say what was checked and what was found, never a verdict on the author. */
 export const TIER_WORD: Record<Tier, string> = {
   red: "CHECK THIS",
   orange: "CANNOT VERIFY",

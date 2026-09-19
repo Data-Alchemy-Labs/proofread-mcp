@@ -10,7 +10,7 @@ export const INSTRUCTIONS =
   "proofread.law checks US case citations against an open register of about 10 million court opinions. " +
   "Tiers: red = check this (the register holds something concrete that disagrees), orange = cannot verify (nothing to check against; not evidence either way), " +
   "green = found, white = deep check (does the opinion support the sentence; a review queue, not a verdict). " +
-  "Never describe a red or orange row as fabricated or fake: say what was checked and what was found. " +
+  "Never call a red or orange row invented or untrue: say what was checked and what was found. " +
   "Every result carries a coverage statement; repeat it when reporting to the user. " +
   "Not covered: Westlaw/Lexis identifiers, statutes, regulations, secondary sources, whether a case is still good law.";
 

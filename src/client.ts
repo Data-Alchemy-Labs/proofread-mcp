@@ -43,7 +43,7 @@ export function createClient(config: Config, fetchImpl: FetchLike = globalThis.f
     try {
       res = await fetchImpl(url, { ...init, signal: withTimeout(timeoutMs, signal) });
     } catch (cause) {
-      throw ProofreadError.network(config.baseUrl, cause);
+      throw ProofreadError.fromFetchFailure(config.baseUrl, cause);
     }
     if (!res.ok) throw ProofreadError.fromBody(res.status, await bodyAsJson(res));
     return res;
@@ -112,6 +112,19 @@ async function bodyAsJson(res: Response): Promise<unknown> {
 
 function withTimeout(ms: number, signal?: AbortSignal): AbortSignal {
   const timeout = AbortSignal.timeout(ms);
-  if (!signal) return timeout;
-  return typeof AbortSignal.any === "function" ? AbortSignal.any([signal, timeout]) : signal;
+  return signal ? anySignal([signal, timeout]) : timeout;
+}
+
+/** AbortSignal.any arrived in Node 20.3; older 20.x gets the same behaviour by hand. */
+export function anySignal(signals: AbortSignal[]): AbortSignal {
+  if (typeof AbortSignal.any === "function") return AbortSignal.any(signals);
+  const controller = new AbortController();
+  for (const s of signals) {
+    if (s.aborted) {
+      controller.abort(s.reason);
+      break;
+    }
+    s.addEventListener("abort", () => controller.abort(s.reason), { once: true });
+  }
+  return controller.signal;
 }

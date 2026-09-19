@@ -27,9 +27,17 @@ export class ProofreadError extends Error {
     const detail = cause instanceof Error ? cause.message : String(cause);
     return new ProofreadError(0, "network", `Could not reach ${baseUrl}: ${detail}`);
   }
+
+  /** fetch rejected: our timeout fired, the MCP client cancelled, or the host was not reachable. */
+  static fromFetchFailure(baseUrl: string, cause: unknown): ProofreadError {
+    const name = cause instanceof Error ? cause.name : "";
+    if (name === "TimeoutError") return new ProofreadError(0, "timeout", `no answer from ${baseUrl} in time`);
+    if (name === "AbortError") return new ProofreadError(0, "cancelled", "the request was cancelled by the client");
+    return ProofreadError.network(baseUrl, cause);
+  }
 }
 
-/** One plain sentence a model can act on. Wording follows PRODUCT.md (never "fabricated", never blame the user). */
+/** One plain sentence a model can act on. Wording follows PRODUCT.md: what was checked, what was found, what to do next. */
 export function explain(err: unknown): string {
   if (!(err instanceof ProofreadError)) {
     return `Unexpected error: ${err instanceof Error ? err.message : String(err)}`;
@@ -37,6 +45,7 @@ export function explain(err: unknown): string {
   const i = err.info;
   switch (err.code) {
     case "network":
+    case "cancelled":
       return err.message;
     case "plan_required":
       return `proofread.law: this needs the ${String(i.plan ?? "paid")} plan` +

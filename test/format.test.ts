@@ -19,7 +19,7 @@ describe("formatReport", () => {
     const red = lines.find((l) => l.startsWith("- CHECK THIS"));
     expect(red).toBe(
       "- CHECK THIS: 509 U.S. 644 (Bostock v. Clayton County, 2020) [cited 2 times]. " +
-        "Register has Bostock v. Clayton County at 590 U.S. 644 — check the volume. " +
+        "Register has Bostock v. Clayton County at 590 U.S. 644. Check the volume. " +
         "In the register, 509 U.S. 644 is Shaw v. Reno. The case named in the document exists; this citation does not point to it. " +
         "Register: https://www.courtlistener.com/opinion/4767953/bostock-v-clayton-county/",
     );
@@ -54,11 +54,11 @@ describe("formatReport", () => {
     const r = sampleReport();
     r.mode = "deep";
     r.summary.white = 1;
-    r.rows[3] = { ...r.rows[3]!, tier: "white", support: { status: "not_confirmed", headline: "Could not confirm the proposition in the opinion — review", confidence: 0.41, band: "low", passage: "x".repeat(400) } };
+    r.rows[3] = { ...r.rows[3]!, tier: "white", support: { status: "not_confirmed", headline: "Could not confirm the proposition in the opinion; review", confidence: 0.41, band: "low", passage: "x".repeat(400) } };
     const text = formatReport(r);
     expect(text).toContain("Deep check (white): 1.");
     const white = text.split("\n").find((l) => l.startsWith("- DEEP CHECK"))!;
-    expect(white).toContain("347 U.S. 483 (Brown v. Board of Education, 1954). Could not confirm the proposition in the opinion — review. (confidence 0.41, low)");
+    expect(white).toContain("347 U.S. 483 (Brown v. Board of Education, 1954). Could not confirm the proposition in the opinion; review. (confidence 0.41, low)");
     expect(white).toMatch(/Closest passage: "x{299}…"/);
     expect(text).toContain("review queue, not a verdict");
   });

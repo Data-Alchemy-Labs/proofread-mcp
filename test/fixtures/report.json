@@ -11,7 +11,7 @@
     {
       "n": 1, "occurrences": 2, "also_at": [4], "tier": "red", "tier_label": "Check this",
       "cite": "509 U.S. 644", "citation": "509 U.S. 644", "parties": "Bostock v. Clayton County", "year": 2020,
-      "headline": "Register has Bostock v. Clayton County at 590 U.S. 644 — check the volume",
+      "headline": "Register has Bostock v. Clayton County at 590 U.S. 644. Check the volume",
       "detail": "In the register, 509 U.S. 644 is Shaw v. Reno. The case named in the document exists; this citation does not point to it.",
       "evidence": {"register_name": "Bostock v. Clayton County", "register_date": "2020-06-15", "court": "U.S.", "cluster_id": 4767953,
                    "resolve_match": "name", "cite_points_to": "Shaw v. Reno", "citations": ["590 U.S. 644", "140 S. Ct. 1731"],
@@ -20,11 +20,11 @@
     },
     {
       "n": 2, "occurrences": 1, "tier": "orange", "tier_label": "Cannot verify", "citation": "2023 WL 123456", "reason": "database_id",
-      "headline": "Westlaw/Lexis identifier — open registers cannot resolve it", "detail": "Check it in Westlaw or Lexis.", "support": null, "code": "unresolved:database_id"
+      "headline": "Westlaw/Lexis identifier. Open registers cannot resolve it", "detail": "Check it in Westlaw or Lexis.", "support": null, "code": "unresolved:database_id"
     },
     {
       "n": 3, "occurrences": 1, "tier": "orange", "tier_label": "Cannot verify", "citation": "2022 U.S. Dist. LEXIS 999", "reason": "database_id",
-      "headline": "Westlaw/Lexis identifier — open registers cannot resolve it", "detail": "Check it in Westlaw or Lexis.", "support": null, "code": "unresolved:database_id"
+      "headline": "Westlaw/Lexis identifier. Open registers cannot resolve it", "detail": "Check it in Westlaw or Lexis.", "support": null, "code": "unresolved:database_id"
     },
     {
       "n": 5, "occurrences": 1, "tier": "green", "tier_label": "Found", "citation": "347 U.S. 483", "parties": "Brown v. Board of Education", "year": 1954,

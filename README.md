@@ -146,16 +146,16 @@ Input:
 
 > Title VII forbids discrimination because of sexual orientation. Bostock v. Clayton County, 509 U.S. 644 (2020).
 
-`check_citations` returns:
+`check_citations` returns (real output, review instance, 2026-09-20):
 
 ```
-Coverage: Checked against 10.1 M cases (...); Westlaw/Lexis identifiers are not resolvable; ...
+Coverage: Checked against 10.1 M cases (CourtListener bulk data 2026-06-30, last refreshed 2026-09-19); federal appellate 2019 to 2023 is 10 to 15% incomplete; Westlaw/Lexis identifiers are not resolvable; statutes, regulations and secondary sources are not checked.
 Summary: 1 citation, 1 row. Check this (red): 1. Cannot verify (orange): 0. Found (green): 0.
 Flagged rows:
-- CHECK THIS: 509 U.S. 644 (Bostock v. Clayton County, 2020). Register has Bostock v. Clayton County at 590 U.S. 644 — check the volume. In the register, 509 U.S. 644 is Shaw v. Reno. ... Register: https://www.courtlistener.com/opinion/...
+- CHECK THIS: 509 U.S. 644 (Bostock v. Clayton County). Register has Bostock v. Clayton County at 590 U.S. 644. Check the volume. In the register, 509 U.S. 644 is Shaw v. Reno. The case named in the document exists; this citation does not point to it. Register: https://www.courtlistener.com/opinion/4760997/bostock-v-clayton-county/
 Found: 0 rows resolved to a case in the register.
-Report id: r_1a2b3c4d (give it to render_report for a markdown report). Elapsed: 0.4 s.
-Storage: Nothing you submit is stored. ...
+Report id: r_1ff74051 (give it to render_report for a markdown report). Elapsed: 0.03 s.
+Storage: Nothing you submit is stored. The document is processed in memory and discarded when this report is returned; only counts (citations, tiers, timing) are logged, never text.
 ```
 
 ## Development

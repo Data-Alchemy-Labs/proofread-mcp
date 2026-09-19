@@ -1,0 +1,130 @@
+import { describe, expect, it } from "vitest";
+import { createClient, verifyPath } from "../src/client.js";
+import { ProofreadError } from "../src/errors.js";
+import { error402, error429, mockFetch, sampleReport, sseBody } from "./helpers.js";
+
+const cfg = { baseUrl: "https://api.test" };
+
+describe("verifyPath: SSE vs one JSON", () => {
+  it("default check has no query", () => expect(verifyPath(false, false)).toBe("/verify"));
+  it("deep without a row listener asks for one JSON", () => expect(verifyPath(true, false)).toBe("/verify?deep=1&stream=0"));
+  it("deep with a row listener streams", () => expect(verifyPath(true, true)).toBe("/verify?deep=1"));
+});
+
+describe("verifyText", () => {
+  it("posts JSON and returns the report", async () => {
+    const { fetch, calls } = mockFetch({ body: sampleReport() });
+    const report = await createClient(cfg, fetch).verifyText("509 U.S. 644");
+    expect(report.summary.red).toBe(1);
+    expect(calls[0]?.url).toBe("https://api.test/verify");
+    const init = calls[0]!.init;
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toEqual({ text: "509 U.S. 644" });
+    expect((init.headers as Record<string, string>)["Content-Type"]).toBe("application/json");
+  });
+
+  it("sends the API key only when configured", async () => {
+    const a = mockFetch({ body: sampleReport() });
+    await createClient(cfg, a.fetch).verifyText("x");
+    expect((a.calls[0]!.init.headers as Record<string, string>).Authorization).toBeUndefined();
+    const b = mockFetch({ body: sampleReport() });
+    await createClient({ ...cfg, apiKey: "pl_abc_def" }, b.fetch).verifyText("x");
+    expect((b.calls[0]!.init.headers as Record<string, string>).Authorization).toBe("Bearer pl_abc_def");
+  });
+
+  it("deep with onRow reads the SSE stream, merges rows and the done summary", async () => {
+    const provisional = sampleReport();
+    provisional.mode = "deep";
+    provisional.summary.deep_pending = 1;
+    const finished = { ...provisional.rows[3]!, tier: "white" as const, support: { status: "confirmed" as const, headline: "Passage found that states this", confidence: 0.97 } };
+    const body = sseBody(provisional, [finished], { summary: { white: 1, green: 0, deep_pending: 0 }, elapsed_s: 3.9 });
+    const { fetch, calls } = mockFetch({ text: body, headers: { "content-type": "text/event-stream" } });
+    const seen: string[] = [];
+    const report = await createClient(cfg, fetch).verifyText("x", { deep: true, onRow: (row) => seen.push(row.citation) });
+    expect(calls[0]?.url).toBe("https://api.test/verify?deep=1");
+    expect(seen).toEqual(["347 U.S. 483"]);
+    expect(report.rows.find((r) => r.n === 5)?.tier).toBe("white");
+    expect(report.summary.white).toBe(1);
+    expect(report.summary.red).toBe(1); // untouched keys survive the merge
+    expect(report.elapsed_s).toBe(3.9);
+  });
+
+  it("deep without onRow asks for one JSON", async () => {
+    const { fetch, calls } = mockFetch({ body: sampleReport() });
+    await createClient(cfg, fetch).verifyText("x", { deep: true });
+    expect(calls[0]?.url).toBe("https://api.test/verify?deep=1&stream=0");
+  });
+
+  it("maps a 402 to plan_required with the plan details", async () => {
+    const { fetch } = mockFetch({ status: 402, body: error402 });
+    const err = await createClient(cfg, fetch).verifyText("x").catch((e) => e);
+    expect(err).toBeInstanceOf(ProofreadError);
+    expect(err.status).toBe(402);
+    expect(err.code).toBe("plan_required");
+    expect(err.info.upgrade).toBe("https://proofread.law/pricing");
+  });
+
+  it("maps the real 429 body to rate_limited with retry_after", async () => {
+    const { fetch } = mockFetch({ status: 429, body: error429 });
+    const err = await createClient(cfg, fetch).verifyText("x").catch((e) => e);
+    expect(err.code).toBe("rate_limited");
+    expect(err.info.retry_after).toBe(3565);
+  });
+
+  it("wraps a network failure with the base URL", async () => {
+    const { fetch } = mockFetch({ throws: new TypeError("fetch failed") });
+    const err = await createClient(cfg, fetch).verifyText("x").catch((e) => e);
+    expect(err.code).toBe("network");
+    expect(err.status).toBe(0);
+    expect(err.message).toContain("https://api.test");
+    expect(err.message).toContain("fetch failed");
+  });
+
+  it("gives a generic code when the error body is not the envelope", async () => {
+    const { fetch } = mockFetch({ status: 502, text: "bad gateway", headers: { "content-type": "text/html" } });
+    const err = await createClient(cfg, fetch).verifyText("x").catch((e) => e);
+    expect(err.code).toBe("http_502");
+  });
+});
+
+describe("verifyFile", () => {
+  it("uploads multipart with the file name and lets fetch set the boundary", async () => {
+    const { fetch, calls } = mockFetch({ body: sampleReport() });
+    await createClient(cfg, fetch).verifyFile(new TextEncoder().encode("hello 590 U.S. 644"), "brief.txt");
+    const init = calls[0]!.init;
+    expect(init.body).toBeInstanceOf(FormData);
+    const file = (init.body as FormData).get("file") as File;
+    expect(file.name).toBe("brief.txt");
+    expect(await file.text()).toBe("hello 590 U.S. 644");
+    expect((init.headers as Record<string, string>)["Content-Type"]).toBeUndefined();
+  });
+
+  it("refuses more than 10 MB before uploading", () => {
+    const { fetch, calls } = mockFetch({ body: sampleReport() });
+    expect(() => createClient(cfg, fetch).verifyFile(new Uint8Array(10 * 1024 * 1024 + 1), "big.pdf")).toThrow(/bytes/);
+    expect(calls).toHaveLength(0);
+  });
+});
+
+describe("resolveCitation, renderMarkdown, coverage", () => {
+  it("resolveCitation returns the first row", async () => {
+    const { fetch } = mockFetch({ body: sampleReport() });
+    const { row } = await createClient(cfg, fetch).resolveCitation("509 U.S. 644");
+    expect(row?.parties).toBe("Bostock v. Clayton County");
+  });
+
+  it("renderMarkdown posts the report to /render?format=md and returns text", async () => {
+    const { fetch, calls } = mockFetch({ text: "# proofread.law report\n" });
+    const md = await createClient(cfg, fetch).renderMarkdown(sampleReport());
+    expect(md).toMatch(/^# proofread/);
+    expect(calls[0]?.url).toBe("https://api.test/render?format=md");
+    expect(JSON.parse(String(calls[0]!.init.body)).summary.rows).toBe(4);
+  });
+
+  it("coverage reads /api/coverage", async () => {
+    const { fetch, calls } = mockFetch({ body: { coverage: "C", storage: "S" } });
+    expect(await createClient(cfg, fetch).coverage()).toEqual({ coverage: "C", storage: "S" });
+    expect(calls[0]?.url).toBe("https://api.test/api/coverage");
+    expect(calls[0]?.init.method).toBe("GET");
+  });
+});

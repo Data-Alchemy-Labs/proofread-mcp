@@ -1,0 +1,47 @@
+{
+  "name": "proofread-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for proofread.law: check legal citations from Claude, Cursor or the OpenAI Agents SDK",
+  "license": "MIT",
+  "author": "Data Alchemy Labs",
+  "type": "module",
+  "bin": {
+    "proofread-mcp": "dist/cli.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node -e \"require('fs').chmodSync('dist/cli.js', 0o755)\"",
+    "test": "vitest run",
+    "test:live": "LIVE=1 vitest run test/live.test.ts",
+    "start": "node dist/cli.js",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "legal",
+    "citations",
+    "proofread.law",
+    "claude",
+    "cursor",
+    "openai"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  }
+}

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Spawns the stdio server and drives it with raw JSON-RPC: initialize, tools/list, then tools/call.
-// `--offline` stops after tools/list (no network). Without it, `coverage` and `check_citations` hit the live API.
+// `--offline` stops after tools/list (no network). Without it, `coverage`, `check_citations`, `resolve_citation` and
+// `resolve_citations` hit the live API (PROOFREAD_API, default https://proofread.law).
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
@@ -51,8 +52,8 @@ notify("notifications/initialized", {});
 const list = await request("tools/list", {});
 const names = (list.result?.tools ?? []).map((t) => t.name);
 console.log("<- tools/list:", names.join(", "), "\n");
-if (names.length !== 5) {
-  console.error("expected 5 tools");
+if (names.length !== 6) {
+  console.error("expected 6 tools");
   process.exit(1);
 }
 
@@ -66,6 +67,14 @@ if (!offline) {
   const check = await request("tools/call", { name: "check_citations", arguments: { text } });
   show("tools/call check_citations", check.result ?? check.error);
   failed ||= Boolean(check.error || check.result?.isError);
+
+  const one = await request("tools/call", { name: "resolve_citation", arguments: { citation: "Bostock v. Clayton County, 590 U.S. 644 (2020)" } });
+  show("tools/call resolve_citation", one.result ?? one.error);
+  failed ||= Boolean(one.error || one.result?.isError);
+
+  const many = await request("tools/call", { name: "resolve_citations", arguments: { cites: ["590 U.S. 644", "509 U.S. 644", "1 F.4th 99999", "999 U.S. 1", "2023 WL 4567890"] } });
+  show("tools/call resolve_citations", many.result ?? many.error);
+  failed ||= Boolean(many.error || many.result?.isError);
 }
 
 child.stdin.end();

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { INSTRUCTIONS } from "../src/server.js";
-import { connectedClient, error402, error429, sampleReport, sseBody, textOf } from "./helpers.js";
+import { connectedClient, error402, error429, resolveBatch, resolveResult, sampleReport, sseBody, textOf } from "./helpers.js";
 
 type Connected = Awaited<ReturnType<typeof connectedClient>>;
 let session: Connected | undefined;
@@ -18,7 +18,7 @@ describe("tools/list", () => {
   it("lists the five tools with descriptions written for a model", async () => {
     session = await connectedClient();
     const { tools } = await session.mcp.listTools();
-    expect(tools.map((t) => t.name)).toEqual(["check_citations", "check_document", "resolve_citation", "coverage", "render_report"]);
+    expect(tools.map((t) => t.name)).toEqual(["check_citations", "check_document", "resolve_citation", "resolve_citations", "coverage", "render_report"]);
     for (const t of tools) {
       expect(t.description?.length ?? 0).toBeGreaterThan(80);
       expect(t.annotations?.readOnlyHint).toBe(true);
@@ -148,30 +148,63 @@ describe("check_document", () => {
 });
 
 describe("resolve_citation", () => {
-  it("returns one row in detail with the coverage statement", async () => {
-    session = await connectedClient({ body: sampleReport() });
-    const result = await session.mcp.callTool({ name: "resolve_citation", arguments: { citation: "Bostock v. Clayton County, 509 U.S. 644 (2020)" } });
+  it("GETs /v1/resolve (not /verify) and returns the case with the coverage statement", async () => {
+    session = await connectedClient({ body: resolveResult("found") });
+    const result = await session.mcp.callTool({ name: "resolve_citation", arguments: { citation: "Bostock v. Clayton County, 590 U.S. 644 (2020)" } });
     const text = textOf(result);
-    expect(text.split("\n")[0]).toBe("CHECK THIS: 509 U.S. 644 (Bostock v. Clayton County, 2020)");
-    expect(text).toContain("Evidence: register name: Bostock v. Clayton County");
-    expect(text).toContain("(3 more citations in the input; showing the first.");
+    expect(text.split("\n")[0]).toBe("FOUND: 590 U.S. 644 is Bostock v. Clayton County (scotus, 2020-06-15).");
     expect(text).toMatch(/\nCoverage: Checked against/);
-    expect(JSON.parse(String(session.calls[0]!.init.body))).toEqual({ text: "Bostock v. Clayton County, 509 U.S. 644 (2020)" });
+    expect(session.calls[0]?.url).toBe("https://api.test/v1/resolve?cite=Bostock%20v.%20Clayton%20County%2C%20590%20U.S.%20644%20(2020)");
+    expect(session.calls[0]?.init.method).toBe("GET");
+    expect(result.structuredContent).toMatchObject({ status: "found", cite: "590 U.S. 644", case: { id: 4760997, name: "Bostock v. Clayton County" } });
   });
 
   it("says when no citation was recognised", async () => {
-    const empty = { ...sampleReport(), rows: [], summary: { ...sampleReport().summary, citations: 0, rows: 0, red: 0, orange: 0, green: 0 } };
-    session = await connectedClient({ body: empty });
-    const text = textOf(await session.mcp.callTool({ name: "resolve_citation", arguments: { citation: "hello there" } }));
-    expect(text).toContain('No case citation was recognised in: "hello there"');
+    session = await connectedClient({ body: resolveResult("unparsed") });
+    const text = textOf(await session.mcp.callTool({ name: "resolve_citation", arguments: { citation: "no citation here" } }));
+    expect(text).toContain('NO CITATION RECOGNISED in "no citation here"');
     expect(text).toContain("Coverage:");
   });
 
-  it("402, 429 and network errors surface", async () => {
-    session = await connectedClient({ status: 402, body: error402 }, { status: 429, body: error429 }, network);
+  it("400, 402, 429 and network errors surface", async () => {
+    session = await connectedClient({ status: 400, body: { error: { code: "missing_cite", message: "send ?cite=590+U.S.+644" } } },
+      { status: 402, body: error402 }, { status: 429, body: error429 }, network);
     const call = () => session!.mcp.callTool({ name: "resolve_citation", arguments: { citation: "1 U.S. 1" } });
+    expect(textOf(await call())).toBe("proofread.law: send ?cite=590+U.S.+644.");
     expect(textOf(await call())).toContain("needs the solo plan");
     expect(textOf(await call())).toContain("rate limit");
+    expect(textOf(await call())).toContain("Could not reach");
+  });
+});
+
+describe("resolve_citations (batch)", () => {
+  it("POSTs the list to /v1/resolve and returns one line per citation with counts and the coverage statement", async () => {
+    session = await connectedClient({ body: resolveBatch() });
+    const cites = ["590 U.S. 644", "509 U.S. 644", "600 U.S. 1", "1 F.4th 99999", "999 U.S. 1", "2023 WL 4567890", "no citation here"];
+    const result = await session.mcp.callTool({ name: "resolve_citations", arguments: { cites } });
+    const text = textOf(result);
+    expect(text.split("\n")[0]).toBe("7 citations: 2 found, 1 ambiguous, 1 not in the register, 2 cannot verify, 1 no citation recognised.");
+    expect(text).toContain("- FOUND: 590 U.S. 644 = Bostock v. Clayton County");
+    expect(text).toContain("- CANNOT VERIFY: 2023 WL 4567890 is a Westlaw/Lexis identifier");
+    expect(text.split("\n").at(-1)).toMatch(/^Coverage: Checked against/);
+    expect(session.calls[0]?.url).toBe("https://api.test/v1/resolve");
+    expect(JSON.parse(String(session.calls[0]!.init.body))).toEqual({ cites });
+    expect((result.structuredContent as { results: unknown[] }).results).toHaveLength(7);
+  });
+
+  it("rejects an empty list and more than 500 at the schema, without calling", async () => {
+    session = await connectedClient({ body: resolveBatch() });
+    expect((await session.mcp.callTool({ name: "resolve_citations", arguments: { cites: [] } })).isError).toBe(true);
+    expect((await session.mcp.callTool({ name: "resolve_citations", arguments: { cites: new Array(501).fill("1 U.S. 1") } })).isError).toBe(true);
+    expect(session.calls).toHaveLength(0);
+  });
+
+  it("402, 429 (quota) and network errors surface", async () => {
+    session = await connectedClient({ status: 402, body: error402 },
+      { status: 429, body: { error: { code: "quota_exceeded", message: "resolves used", used: 1000, limit: 1000, upgrade: "https://proofread.law/pricing" } } }, network);
+    const call = () => session!.mcp.callTool({ name: "resolve_citations", arguments: { cites: ["1 U.S. 1"] } });
+    expect(textOf(await call())).toContain("needs the solo plan");
+    expect(textOf(await call())).toContain("monthly allowance used (1000 of 1000)");
     expect(textOf(await call())).toContain("Could not reach");
   });
 });

@@ -43,10 +43,16 @@ describe.skipIf(!process.env.LIVE)("live: proofread.law", () => {
     expect(md).toContain("509 U.S. 644");
   });
 
-  it("resolve_citation finds Bostock at 590 U.S. 644", async () => {
+  it("resolve_citation finds Bostock at 590 U.S. 644 via the register API", async () => {
     const text = textOf(await mcp.callTool({ name: "resolve_citation", arguments: { citation: "Bostock v. Clayton County, 590 U.S. 644 (2020)" } }));
     console.log(text);
-    expect(text).toMatch(/^FOUND: 590 U\.S\. 644/);
+    expect(text).toMatch(/^FOUND: 590 U\.S\. 644 is Bostock v\. Clayton County/);
     expect(text).toContain("Coverage:");
+  });
+
+  it("resolve_citations answers a list in order", async () => {
+    const text = textOf(await mcp.callTool({ name: "resolve_citations", arguments: { cites: ["590 U.S. 644", "2023 WL 4567890"] } }));
+    console.log(text);
+    expect(text).toMatch(/^2 citations: 1 found, 1 cannot verify\./);
   });
 });

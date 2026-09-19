@@ -6,15 +6,18 @@ proofread.law checks each citation against an open register of about 10 million 
 
 ## What it does
 
-Five tools:
+Six tools:
 
 | Tool | Input | What comes back |
 |---|---|---|
 | `check_citations` | text, `deep` (optional) | The coverage statement, counts per tier, one line per row that needs a human, the number of citations found, a report id |
 | `check_document` | path to a `.pdf`, `.docx` or `.txt` (up to 10 MB), `deep` (optional) | The same, for a file on disk |
-| `resolve_citation` | one citation string | One row in detail: tier, the case the register holds, court, date, parallel citations, link |
+| `resolve_citation` | one citation string | The register's answer for that citation: found (case, court, date, parallel citations, link), ambiguous (candidates), not in the register, cannot verify, known citation, or no citation recognised; the coverage of that volume; the coverage statement |
+| `resolve_citations` | a list of up to 500 citation strings | Counts by status, one line per citation in input order, the coverage statement |
 | `coverage` | nothing | The coverage statement and the storage notice |
 | `render_report` | a report id from a previous check, or the full report JSON | A markdown diligence report |
+
+`check_citations` and `check_document` read prose: they compare the case name and any quotation with the register. `resolve_citation` and `resolve_citations` look the citation string up in the register (the `/v1/resolve` API) and tell you which case sits there; they do not compare it with the name you have.
 
 Tiers, in the words the tools use:
 
@@ -121,7 +124,15 @@ stdio: run `proofread-mcp`. Streamable HTTP: run `proofread-mcp --http --port 33
 
 ## Free tier
 
-Without a key: 20 checks a month per IP address and 3 deep checks a month. `check_citations`, `check_document` and `resolve_citation` each count as one check. `coverage` and `render_report` do not count. There is also a limit of 20 calls an hour per IP. When a limit is reached the tool returns a plain message with the retry time or the upgrade link; nothing is thrown at the protocol level.
+Without a key, per IP address and per month:
+
+| Tools | Quota |
+|---|---|
+| `check_citations`, `check_document` | 20 checks, of which 3 may be deep checks |
+| `resolve_citation`, `resolve_citations` | 1,000 resolves (each citation in a list counts as one) |
+| `coverage`, `render_report` | free, not counted |
+
+There is also a limit of 20 requests an hour per IP. When a limit is reached the tool returns a plain message with the retry time or the upgrade link; nothing is thrown at the protocol level.
 
 `.docx` upload and unlimited checks need a paid plan. See [proofread.law/pricing](https://proofread.law/pricing).
 
@@ -165,11 +176,11 @@ npm install
 npm run build          # tsc -> dist/
 npm test               # vitest, mocked fetch, no network
 LIVE=1 npm test -- test/live.test.ts   # three live calls against proofread.law (counts against the free tier)
-node scripts/smoke-stdio.mjs           # spawn the stdio server, initialize, tools/list, two live tool calls
+node scripts/smoke-stdio.mjs           # spawn the stdio server, initialize, tools/list, four live tool calls
 node scripts/smoke-stdio.mjs --offline # the same without network
 ```
 
-Layout: `src/client.ts` is the typed HTTP client, `src/format.ts` the compact formatter, `src/tools/<name>.ts` one file per tool, `src/server.ts` registers them, `src/cli.ts` picks the transport. When proofread.law's register API (`/v1/resolve`, batch, per-reporter coverage) ships, each new route is one method on the client and one file under `src/tools/`.
+Layout: `src/client.ts` is the typed HTTP client (`/verify`, `/render`, `/api/coverage`, `/v1/resolve` single and batch), `src/format.ts` the compact formatter for checks, `src/resolve_format.ts` the one for register answers, `src/tools/<name>.ts` one file per tool, `src/server.ts` registers them, `src/cli.ts` picks the transport. The remaining register routes (`/v1/extract`, `/v1/case/{id}`, `/v1/coverage` per reporter) slot in the same way: one method on the client, one file under `src/tools/`.
 
 ## Publishing
 

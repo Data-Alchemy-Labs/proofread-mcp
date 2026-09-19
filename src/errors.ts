@@ -62,6 +62,9 @@ export function explain(err: unknown): string {
         " A Firm API key in PROOFREAD_API_KEY lifts the free-tier limits.";
     case "bad_key":
       return "proofread.law rejected the API key in PROOFREAD_API_KEY (unknown or revoked).";
+    case "missing_cite":
+    case "too_many":
+      return `proofread.law: ${err.message}.`;
     case "too_large":
       return `proofread.law: the input is too large (${err.message}); the cap is 10 MB.`;
     case "unreadable":

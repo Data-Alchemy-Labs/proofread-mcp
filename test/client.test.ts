@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { anySignal, createClient, verifyPath } from "../src/client.js";
 import { ProofreadError } from "../src/errors.js";
-import { error402, error429, mockFetch, sampleReport, sseBody } from "./helpers.js";
+import { error402, error429, mockFetch, resolveBatch, resolveResult, sampleReport, sseBody } from "./helpers.js";
 
 const cfg = { baseUrl: "https://api.test" };
 
@@ -126,12 +126,41 @@ describe("verifyFile", () => {
   });
 });
 
-describe("resolveCitation, renderMarkdown, coverage", () => {
-  it("resolveCitation returns the first row", async () => {
-    const { fetch } = mockFetch({ body: sampleReport() });
-    const { row } = await createClient(cfg, fetch).resolveCitation("509 U.S. 644");
-    expect(row?.parties).toBe("Bostock v. Clayton County");
+describe("resolveV1 and resolveBatch", () => {
+  it("GETs /v1/resolve with the citation URL-encoded and the key when set", async () => {
+    const { fetch, calls } = mockFetch({ body: resolveResult("found") });
+    const r = await createClient({ ...cfg, apiKey: "pl_k" }, fetch).resolveV1("Bostock v. Clayton County, 590 U.S. 644 (2020)");
+    expect(r.status).toBe("found");
+    expect(r.case?.name).toBe("Bostock v. Clayton County");
+    expect(calls[0]?.url).toBe("https://api.test/v1/resolve?cite=Bostock%20v.%20Clayton%20County%2C%20590%20U.S.%20644%20(2020)");
+    expect(calls[0]?.init.method).toBe("GET");
+    expect((calls[0]!.init.headers as Record<string, string>).Authorization).toBe("Bearer pl_k");
   });
+
+  it("POSTs /v1/resolve with {cites} for a batch and keeps input order", async () => {
+    const { fetch, calls } = mockFetch({ body: resolveBatch() });
+    const b = await createClient(cfg, fetch).resolveBatch(["590 U.S. 644", "2023 WL 4567890"]);
+    expect(b.results.map((r) => r.status)).toEqual(["found", "found", "ambiguous", "not_found", "beyond_register", "unresolvable", "unparsed"]);
+    expect(calls[0]?.url).toBe("https://api.test/v1/resolve");
+    expect(JSON.parse(String(calls[0]!.init.body))).toEqual({ cites: ["590 U.S. 644", "2023 WL 4567890"] });
+  });
+
+  it("refuses more than 500 citations before calling", async () => {
+    const { fetch, calls } = mockFetch({ body: resolveBatch() });
+    const err = await createClient(cfg, fetch).resolveBatch(new Array(501).fill("1 U.S. 1")).catch((e) => e);
+    expect(err.code).toBe("too_many");
+    expect(calls).toHaveLength(0);
+  });
+
+  it("maps 400 missing_cite, 429 and network failures", async () => {
+    const c = (a: Parameters<typeof mockFetch>[0]) => createClient(cfg, mockFetch(a).fetch);
+    expect((await c({ status: 400, body: { error: { code: "missing_cite", message: "send ?cite=590+U.S.+644" } } }).resolveV1("x").catch((e) => e)).code).toBe("missing_cite");
+    expect((await c({ status: 429, body: error429 }).resolveV1("x").catch((e) => e)).code).toBe("rate_limited");
+    expect((await c({ throws: new TypeError("fetch failed") }).resolveBatch(["x"]).catch((e) => e)).code).toBe("network");
+  });
+});
+
+describe("renderMarkdown, coverage", () => {
 
   it("renderMarkdown posts the report to /render?format=md and returns text", async () => {
     const { fetch, calls } = mockFetch({ text: "# proofread.law report\n" });

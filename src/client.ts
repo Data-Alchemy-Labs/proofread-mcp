@@ -1,7 +1,7 @@
 import type { Config } from "./config.js";
 import { ProofreadError } from "./errors.js";
 import { readSseReport } from "./sse.js";
-import type { Coverage, Report, Row } from "./types.js";
+import type { Coverage, Report, ResolveBatch, ResolveResult, Row } from "./types.js";
 
 export const USER_AGENT = "proofread-mcp/0.1.0 (+https://github.com/Data-Alchemy-Labs/proofread-mcp)";
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
@@ -20,11 +20,15 @@ export interface VerifyOptions {
   signal?: AbortSignal;
 }
 
+export const MAX_BATCH_CITES = 500;
+
 export interface Client {
   verifyText(text: string, options?: VerifyOptions): Promise<Report>;
   verifyFile(bytes: Uint8Array, filename: string, options?: VerifyOptions): Promise<Report>;
-  /** One citation string to one row. Today it goes through /verify; it will move to /v1/resolve when that route exists. */
-  resolveCitation(cite: string, signal?: AbortSignal): Promise<{ row: Row | undefined; report: Report }>;
+  /** One citation string against the register (GET /v1/resolve). Counts against the resolve quota, not the check quota. */
+  resolveV1(cite: string, signal?: AbortSignal): Promise<ResolveResult>;
+  /** Up to 500 citation strings in one call (POST /v1/resolve); results come back in input order. */
+  resolveBatch(cites: string[], signal?: AbortSignal): Promise<ResolveBatch>;
   renderMarkdown(report: Report, signal?: AbortSignal): Promise<string>;
   coverage(signal?: AbortSignal): Promise<Coverage>;
 }
@@ -69,9 +73,16 @@ export function createClient(config: Config, fetchImpl: FetchLike = globalThis.f
       return verify(form, undefined, options); // fetch sets the multipart boundary
     },
 
-    async resolveCitation(cite, signal) {
-      const report = await verify(JSON.stringify({ text: cite }), "application/json", signal ? { signal } : {});
-      return { row: report.rows[0], report };
+    async resolveV1(cite, signal) {
+      const res = await call(`/v1/resolve?cite=${encodeURIComponent(cite)}`, { method: "GET", headers: headers() }, DEFAULT_TIMEOUT_MS, signal);
+      return (await res.json()) as ResolveResult;
+    },
+
+    async resolveBatch(cites, signal) {
+      if (cites.length > MAX_BATCH_CITES) throw new ProofreadError(400, "too_many", `${cites.length} citations; the cap is ${MAX_BATCH_CITES} per call`);
+      const res = await call("/v1/resolve", { method: "POST", headers: headers({ "Content-Type": "application/json" }), body: JSON.stringify({ cites }) },
+        DEFAULT_TIMEOUT_MS, signal);
+      return (await res.json()) as ResolveBatch;
     },
 
     async renderMarkdown(report, signal) {

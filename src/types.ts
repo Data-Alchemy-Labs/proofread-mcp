@@ -89,3 +89,48 @@ export interface ApiErrorBody {
     [key: string]: unknown;
   };
 }
+
+// The register API (GET/POST /v1/resolve).
+
+export type ResolveStatus = "found" | "ambiguous" | "not_found" | "unverifiable" | "beyond_register" | "known_cite" | "unresolvable" | "unparsed";
+
+export interface ResolveCase {
+  id: number;
+  name: string;
+  court?: string;
+  date?: string;
+  citations?: string[];
+  url?: string;
+}
+
+export interface ResolveCoverage {
+  register_coverage: string; // volume_present | volume_thin | volume_absent | database_id | ...
+  reporter?: string;
+  volume?: string;
+  max_volume?: number;
+  volume_n?: number;
+  beyond_max?: boolean;
+  [key: string]: unknown;
+}
+
+export interface ResolveResult {
+  cite: string;
+  normalized: string | null;
+  status: ResolveStatus;
+  case: ResolveCase | null;
+  candidates: ResolveCase[];
+  coverage: ResolveCoverage | null;
+  match?: "exact" | "pincite";
+  known_as?: { name: string; year?: number; court_hint?: string; n_citing?: number };
+  freshness?: { dump: string; refreshed: string };
+  coverage_statement?: string;
+  [key: string]: unknown;
+}
+
+export interface ResolveBatch {
+  results: ResolveResult[];
+  freshness?: { dump: string; refreshed: string };
+  coverage_statement: string;
+  plan?: string;
+  elapsed_s?: number;
+}

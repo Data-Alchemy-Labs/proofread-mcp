@@ -4,12 +4,24 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { FetchLike } from "../src/client.js";
 import { createClient } from "../src/client.js";
 import { createServer } from "../src/server.js";
-import type { Report } from "../src/types.js";
+import type { Report, ResolveBatch, ResolveResult } from "../src/types.js";
 
 const here = new URL(".", import.meta.url);
 
 export function sampleReport(): Report {
   return JSON.parse(readFileSync(new URL("fixtures/report.json", here), "utf8")) as Report;
+}
+
+/** The real POST /v1/resolve answer for seven citations covering found, pincite, ambiguous, not_found, beyond_register, unresolvable, unparsed. */
+export function resolveBatch(): ResolveBatch {
+  return JSON.parse(readFileSync(new URL("fixtures/resolve-batch.json", here), "utf8")) as ResolveBatch;
+}
+
+export function resolveResult(status: ResolveResult["status"]): ResolveResult {
+  const batch = resolveBatch();
+  const r = batch.results.find((x) => x.status === status);
+  if (!r) throw new Error(`no fixture result with status ${status}`);
+  return { ...r, freshness: batch.freshness, coverage_statement: batch.coverage_statement };
 }
 
 export const error429 = JSON.parse(readFileSync(new URL("fixtures/error-429.json", here), "utf8")) as unknown;

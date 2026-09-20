@@ -204,7 +204,7 @@ describe("resolveV1 and resolveBatch", () => {
   it("POSTs /v1/resolve with {cites} for a batch and keeps input order", async () => {
     const { fetch, calls } = mockFetch({ body: resolveBatch() });
     const b = await createClient(cfg, fetch).resolveBatch(["590 U.S. 644", "2023 WL 4567890"]);
-    expect(b.results.map((r) => r.status)).toEqual(["found", "found", "ambiguous", "not_found", "beyond_register", "unresolvable", "unparsed"]);
+    expect(b.results.map((r) => r.status)).toEqual(["found", "found", "found", "not_found", "beyond_register", "unresolvable", "unparsed", "unverifiable"]);
     expect(calls[0]?.url).toBe("https://api.test/v1/resolve");
     expect(JSON.parse(String(calls[0]!.init.body))).toEqual({ cites: ["590 U.S. 644", "2023 WL 4567890"] });
   });

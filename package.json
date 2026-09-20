@@ -1,6 +1,6 @@
 {
   "name": "proofread-mcp",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "mcpName": "io.github.Data-Alchemy-Labs/proofread-mcp",
   "description": "MCP server for proofread.law: check legal citations from Claude, Cursor or the OpenAI Agents SDK",
   "license": "MIT",

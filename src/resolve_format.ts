@@ -39,14 +39,14 @@ export function formatResolveLine(r: ResolveResult): string {
     case "ambiguous":
       return `- AMBIGUOUS: ${cite} ${matches(r)}; best: ${r.case ? caseLine(r.case) : "none"}`;
     case "not_found":
-      return `- NOT IN THE REGISTER: ${cite}; ${volumeHeld(r.coverage) ?? "the volume is held"} but nothing at this page (a register fact, not evidence about the citation)`;
+      return `- ${label(r)}: ${cite}; ${why(r)}`;
     case "known_cite":
       return `- KNOWN CITATION: ${cite} is not held as an opinion, but other opinions cite it as ${knownAs(r)}`;
     case "unresolvable":
       return `- CANNOT VERIFY: ${cite} is a Westlaw/Lexis identifier; open registers cannot resolve it`;
     case "beyond_register":
     case "unverifiable":
-      return `- CANNOT VERIFY: ${cite}; the register cannot see this yet (${notSeen(r.coverage)})`;
+      return `- ${label(r)}: ${cite}; ${why(r)}`;
     case "unparsed":
       return `- NO CITATION RECOGNISED: ${JSON.stringify(r.cite)}`;
     default:
@@ -81,15 +81,14 @@ function headline(r: ResolveResult): string {
     case "ambiguous":
       return `AMBIGUOUS: ${cite} ${matches(r)}; the best match is ${c ? caseLine(c) : "unclear"}. Candidates:`;
     case "not_found":
-      return `NOT IN THE REGISTER: ${cite}. The register has no case at this page. ` +
-        "A missing entry is a register fact with a coverage qualifier (below), not proof that the case does not exist; check the citation in another source.";
+      return `${label(r)}: ${cite}. ${why(r)}`;
     case "known_cite":
       return `KNOWN CITATION: ${cite} is not held as an opinion, but other opinions cite it as ${knownAs(r)}. The register cannot show the opinion itself; check it in another source.`;
     case "unresolvable":
       return `CANNOT VERIFY: ${cite} is a Westlaw/Lexis identifier. Open registers cannot resolve it; check it in Westlaw or Lexis.`;
     case "beyond_register":
     case "unverifiable":
-      return `CANNOT VERIFY: ${cite}. The register cannot see this yet: ${notSeen(r.coverage)}. This says nothing about whether the case exists; check it in another source.`;
+      return `${label(r)}: ${cite}. ${why(r)}`;
     case "unparsed":
       return `NO CITATION RECOGNISED in ${JSON.stringify(r.cite)}. Reporter citations look like '590 U.S. 644' (volume, reporter, page).`;
     default:
@@ -130,11 +129,54 @@ function volumeHeld(cov: ResolveCoverage | null): string | undefined {
   return `${cov.reporter} volume ${cov.volume} is held${n}`;
 }
 
-function notSeen(cov: ResolveCoverage | null): string {
-  if (!cov?.reporter) return "this reporter is not in the register";
-  if (cov.beyond_max && cov.max_volume !== undefined) return `${cov.reporter} volume ${cov.volume} is newer than the register, which runs to volume ${cov.max_volume}`;
-  if (cov.volume) return `no part of ${cov.reporter} volume ${cov.volume} is held`;
-  return `${cov.reporter} is not held`;
+/** The API's reason for an unverifiable / beyond_register / not_found answer, as a short label after the status word. */
+const REASON_LABEL: Record<string, string> = {
+  recent: "recent, unverified",
+  volume_thin: "held only in part",
+  volume_newer_than_register: "newer than the register",
+  reporter_absent: "reporter not held",
+  page_absent: "not in the register",
+};
+
+function label(r: ResolveResult): string {
+  const word = STATUS_WORD[r.status] ?? String(r.status).toUpperCase();
+  const extra = r.reason ? REASON_LABEL[r.reason] ?? r.reason.replace(/_/g, " ") : undefined;
+  return extra && extra.toUpperCase() !== word ? `${word} (${extra})` : word;
+}
+
+const NOT_A_VERDICT = "This is a register fact with a coverage qualifier, not proof that the case does not exist; check the citation in another source.";
+
+/** The API's `note` verbatim when it sends one; else a sentence from `reason`; else (older API) from the coverage block alone. */
+function why(r: ResolveResult): string {
+  if (r.note) return sentence(r.note);
+  const cov = r.coverage;
+  const vol = cov?.reporter && cov.volume ? `${cov.reporter} volume ${cov.volume}` : "this volume";
+  const n = cov?.volume_n !== undefined ? ` (${cov.volume_n} case${cov.volume_n === 1 ? "" : "s"})` : "";
+  switch (r.reason) {
+    case "recent":
+      return "The citation is recent; the register may hold the case without this citation attached. Resolve with the case name and court, or check at the source.";
+    case "volume_thin":
+      return `${vol} is held only in part${n}, so a missing page is a weak claim. ${NOT_A_VERDICT}`;
+    case "volume_newer_than_register":
+      return `${vol} is newer than the register${cov?.max_volume !== undefined ? `, which runs to volume ${cov.max_volume}` : ""}. ${NOT_A_VERDICT}`;
+    case "reporter_absent":
+      return `The register does not hold ${cov?.reporter ? `the ${cov.reporter} reporter` : "this reporter"}. ${NOT_A_VERDICT}`;
+    case "page_absent":
+      return `${vol} is held${n} but has no case at this page. ${NOT_A_VERDICT}`;
+    default:
+      return `${legacyWhy(r)} ${NOT_A_VERDICT}`;
+  }
+}
+
+/** Older API answers (no reason, no note): say only what the coverage block supports. */
+function legacyWhy(r: ResolveResult): string {
+  const cov = r.coverage;
+  if (!cov?.reporter) return "The register cannot see this citation: the reporter is not held.";
+  const vol = `${cov.reporter} volume ${cov.volume ?? "?"}`;
+  if (cov.beyond_max && cov.max_volume !== undefined) return `${vol} is newer than the register, which runs to volume ${cov.max_volume}.`;
+  if (cov.register_coverage === "volume_absent") return `No part of ${vol} is held.`;
+  if (r.status === "not_found") return `${vol} is held but has no case at this page.`;
+  return `${vol} is held, but this citation could not be attached to a case.`;
 }
 
 /** The coverage of the volume that was asked for, so a not_found inside a thin volume reads as the weak claim it is. */
@@ -143,4 +185,9 @@ function describeCoverage(cov: ResolveCoverage | null): string | undefined {
   const held = volumeHeld(cov);
   const runs = cov.max_volume !== undefined ? `; the register runs to ${cov.reporter} volume ${cov.max_volume}` : "";
   return held ? `Register coverage: ${held}${runs}.` : undefined;
+}
+
+function sentence(text: string): string {
+  const t = text.trim();
+  return /[.!?]$/.test(t) ? t : `${t}.`;
 }

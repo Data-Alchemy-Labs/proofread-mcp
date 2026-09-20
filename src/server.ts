@@ -4,7 +4,7 @@ import { configFromEnv, type Config } from "./config.js";
 import { tools } from "./tools/index.js";
 
 export const SERVER_NAME = "proofread-mcp";
-export const SERVER_VERSION = "0.1.2";
+export const SERVER_VERSION = "0.1.3";
 
 export const INSTRUCTIONS =
   "proofread.law checks US case citations against an open register of about 10 million court opinions. " +

@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "proofread-mcp",
   "display_name": "proofread.law",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Check US case citations against an open register of 10 million court opinions.",
   "long_description": "proofread.law checks every case citation in a draft against an open register of about 10 million US court opinions (CourtListener bulk data). Each row comes back as red (check this: the register holds something concrete that disagrees), orange (cannot verify: nothing to check against, such as a Westlaw or Lexis identifier), green (found) or, with the opt-in deep check, whether the opinion supports the sentence it is cited for. Every result carries the coverage statement. Nothing you submit is stored. Not covered: Westlaw/Lexis identifiers, statutes, regulations, secondary sources, whether a case is still good law.",
   "author": {

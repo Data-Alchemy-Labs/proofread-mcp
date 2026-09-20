@@ -121,6 +121,9 @@ export interface ResolveResult {
   candidates: ResolveCase[];
   coverage: ResolveCoverage | null;
   match?: "exact" | "pincite";
+  /** On unverifiable, beyond_register and not_found: why, and a ready sentence. Older API answers carry neither. */
+  reason?: "recent" | "volume_thin" | "reporter_absent" | "volume_newer_than_register" | "page_absent" | string;
+  note?: string;
   known_as?: { name: string; year?: number; court_hint?: string; n_citing?: number };
   freshness?: { dump: string; refreshed: string };
   coverage_statement?: string;

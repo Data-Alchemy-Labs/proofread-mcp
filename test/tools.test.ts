@@ -204,16 +204,17 @@ describe("resolve_citation", () => {
 describe("resolve_citations (batch)", () => {
   it("POSTs the list to /v1/resolve and returns one line per citation with counts and the coverage statement", async () => {
     session = await connectedClient({ body: resolveBatch() });
-    const cites = ["590 U.S. 644", "509 U.S. 644", "600 U.S. 1", "1 F.4th 99999", "999 U.S. 1", "2023 WL 4567890", "no citation here"];
+    const cites = ["590 U.S. 644", "509 U.S. 644", "600 U.S. 1", "100 F.3d 99999", "999 U.S. 1", "2023 WL 4567890", "no citation here", "925 F.3d 1339"];
     const result = await session.mcp.callTool({ name: "resolve_citations", arguments: { cites } });
     const text = textOf(result);
-    expect(text.split("\n")[0]).toBe("7 citations: 2 found, 1 ambiguous, 1 not in the register, 2 cannot verify, 1 no citation recognised.");
+    expect(text.split("\n")[0]).toBe("8 citations: 3 found, 1 not in the register, 3 cannot verify, 1 no citation recognised.");
+    expect(text).toContain("- CANNOT VERIFY (recent, unverified): 925 F.3d 1339; 2019 is within 7 years");
     expect(text).toContain("- FOUND: 590 U.S. 644 = Bostock v. Clayton County");
     expect(text).toContain("- CANNOT VERIFY: 2023 WL 4567890 is a Westlaw/Lexis identifier");
     expect(text.split("\n").at(-1)).toMatch(/^Coverage: Checked against/);
     expect(session.calls[0]?.url).toBe("https://api.test/v1/resolve");
     expect(JSON.parse(String(session.calls[0]!.init.body))).toEqual({ cites });
-    expect((result.structuredContent as { results: unknown[] }).results).toHaveLength(7);
+    expect((result.structuredContent as { results: unknown[] }).results).toHaveLength(8);
   });
 
   it("rejects an empty list and more than 500 at the schema, without calling", async () => {

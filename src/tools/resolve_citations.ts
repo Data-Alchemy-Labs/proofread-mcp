@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { MAX_BATCH_CITES } from "../client.js";
 import { formatResolveBatch } from "../resolve_format.js";
-import { LIMITS_NOTE, defineTool, fail, ok } from "./tool.js";
+import { KEY_NOTE, LIMITS_NOTE, defineTool, fail, ok } from "./tool.js";
 
 export const resolveCitations = defineTool({
   name: "resolve_citations",
@@ -11,7 +11,7 @@ export const resolveCitations = defineTool({
     "found (the case, court, date, link), ambiguous, not in the register (a register fact with a coverage qualifier, never proof that the case does not exist), " +
     "cannot verify (Westlaw/Lexis identifier, or a volume the register cannot see yet), known citation, or no citation recognised. " +
     "Use it for a table of authorities or any list of citations you already have; use check_citations for prose (it also checks names and quotations). " +
-    LIMITS_NOTE + " Each citation counts against the resolve quota (1,000 a month free), not the check quota.",
+    LIMITS_NOTE + " Each citation counts against the resolve quota (1,000 a month free), not the check quota. " + KEY_NOTE,
   inputSchema: {
     cites: z.array(z.string().min(1).max(500)).min(1).max(MAX_BATCH_CITES).describe("Citation strings, one per entry, up to 500."),
   },

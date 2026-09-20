@@ -6,16 +6,20 @@ proofread.law checks each citation against an open register of about 10 million 
 
 ## What it does
 
-Six tools:
+Eight tools:
 
 | Tool | Input | What comes back |
 |---|---|---|
-| `check_citations` | text, `deep` (optional) | The coverage statement, counts per tier, one line per row that needs a human, the number of citations found, a report id |
-| `check_document` | path to a `.pdf`, `.docx` or `.txt` (up to 10 MB), `deep` (optional) | The same, for a file on disk |
+| `check_citations` | text, `deep` (optional) | The coverage statement, counts per tier, one line per row that needs a human (red first, then orange, then deep-check rows to review), the number of citations found, a report id |
+| `check_document` | path to a `.pdf`, `.docx`, `.txt` or `.md` (up to 10 MB), `deep` (optional) | The same, for a file on disk |
 | `resolve_citation` | one citation string | The register's answer for that citation: found (case, court, date, parallel citations, link), ambiguous (candidates), not in the register, cannot verify, known citation, or no citation recognised; the coverage of that volume; the coverage statement |
 | `resolve_citations` | a list of up to 500 citation strings | Counts by status, one line per citation in input order, the coverage statement |
 | `coverage` | nothing | The coverage statement and the storage notice |
-| `render_report` | a report id from a previous check, or the full report JSON | A markdown diligence report |
+| `render_report` | a report id from a previous check, or the full report JSON | A markdown diligence report with every row |
+| `sign_up` | the account owner's email, a name for the agent | A proofread.law account and an API key (shown once); the server uses it for the rest of the session |
+| `billing_link` | `payg`, `solo` or `firm` | A Stripe Checkout link for the account owner; needs an API key |
+
+The compact result of a check is capped at about 12,000 characters; when a long brief has more flagged rows than fit, the text says how many were left out and `render_report` has them all.
 
 `check_citations` and `check_document` read prose: they compare the case name and any quotation with the register. `resolve_citation` and `resolve_citations` look the citation string up in the register (the `/v1/resolve` API) and tell you which case sits there; they do not compare it with the name you have.
 
@@ -32,9 +36,7 @@ What it cannot do: resolve Westlaw (WL) or Lexis identifiers, check statutes, re
 
 ## Install
 
-Needs Node 20 or newer. No install step is required; `npx` fetches it.
-
-Until the package is on npm, clone this repository, run `npm install && npm run build`, and use `node /absolute/path/to/proofread-mcp/dist/cli.js` wherever the snippets below say `npx -y proofread-mcp`.
+Needs Node 20 or newer. No install step is required; `npx` fetches [proofread-mcp from npm](https://www.npmjs.com/package/proofread-mcp).
 
 ### Claude Desktop
 
@@ -60,7 +62,7 @@ Leave out `env` to use the free tier.
 
 ```bash
 claude mcp add proofread -- npx -y proofread-mcp
-# with a Firm key:
+# with an API key:
 claude mcp add proofread -e PROOFREAD_API_KEY=pl_... -- npx -y proofread-mcp
 ```
 
@@ -95,7 +97,9 @@ Then connect from the Agents SDK:
 from agents import Agent, Runner
 from agents.mcp import MCPServerStreamableHttp
 
-async with MCPServerStreamableHttp(params={"url": "http://127.0.0.1:3333/mcp"}) as proofread:
+# The SDK's default read timeout is 5 s. A check of a long brief takes up to 6 s and a deep check 1 to 2 s per citation,
+# so give the session up to 15 minutes (the API's own deep-check limit).
+async with MCPServerStreamableHttp(params={"url": "http://127.0.0.1:3333/mcp"}, client_session_timeout_seconds=900) as proofread:
     agent = Agent(name="Drafting assistant", instructions="Check every case citation before you rely on it.", mcp_servers=[proofread])
     result = await Runner.run(agent, "Check the citations in this paragraph: ...")
 ```
@@ -105,11 +109,15 @@ import { Agent, run, MCPServerStreamableHttp } from "@openai/agents";
 
 const proofread = new MCPServerStreamableHttp({ url: "http://127.0.0.1:3333/mcp", name: "proofread" });
 await proofread.connect();
-const agent = new Agent({ name: "Drafting assistant", mcpServers: [proofread] });
-const result = await run(agent, "Check the citations in this paragraph: ...");
+try {
+  const agent = new Agent({ name: "Drafting assistant", mcpServers: [proofread] });
+  const result = await run(agent, "Check the citations in this paragraph: ...");
+} finally {
+  await proofread.close();
+}
 ```
 
-The HTTP server binds to 127.0.0.1 by default. To expose it on a network use `--host 0.0.0.0` and put it behind something that adds authentication; the server has none of its own.
+The HTTP server binds to 127.0.0.1 by default and is single-tenant by design: it has no authentication of its own, report ids are shared across sessions, and a key from `sign_up` is adopted by the whole process. Sessions that stay idle for 30 minutes are closed. To expose it on a network use `--host 0.0.0.0` and put it behind something that adds authentication.
 
 ### Any MCP client
 
@@ -119,20 +127,24 @@ stdio: run `proofread-mcp`. Streamable HTTP: run `proofread-mcp --http --port 33
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `PROOFREAD_API_KEY` | unset | A Firm plan API key (`pl_...`), sent as `Authorization: Bearer`. Without it the free tier applies |
+| `PROOFREAD_API_KEY` | unset | An API key (`pl_...`), sent as `Authorization: Bearer` to `PROOFREAD_API` only. Every plan has keys (free 1, pay as you go 3, solo 3, firm 5); a paid-plan key lifts the free-tier limits. Without it the free tier applies per IP |
 | `PROOFREAD_API` | `https://proofread.law` | Base URL, for a self-hosted or test instance |
+
+## Accounts and keys
+
+An agent can open an account itself: `sign_up` posts the owner's real email and a name to `POST /agent/signup` and gets a key back, shown once. The server uses that key for the rest of the session; put it in `PROOFREAD_API_KEY` to keep it. The owner receives one confirmation email. When a quota is used up (a tool answers "needs the ... plan" or "monthly allowance used"), `billing_link` returns a Stripe Checkout link for the owner; nothing is charged until they pay. Plans and prices: [proofread.law/pricing](https://proofread.law/pricing). The onboarding text the API publishes for agents is at [proofread.law/agent/onboarding.md](https://proofread.law/agent/onboarding.md).
 
 ## Free tier
 
-Without a key, per IP address and per month:
+Per month, per IP address without a key or per account with a free-tier key:
 
 | Tools | Quota |
 |---|---|
 | `check_citations`, `check_document` | 20 checks, of which 3 may be deep checks |
 | `resolve_citation`, `resolve_citations` | 1,000 resolves (each citation in a list counts as one) |
-| `coverage`, `render_report` | free, not counted |
+| `coverage`, `render_report`, `sign_up`, `billing_link` | free, not counted |
 
-There is also a limit of 20 requests an hour per IP. When a limit is reached the tool returns a plain message with the retry time or the upgrade link; nothing is thrown at the protocol level.
+There is also a limit of 20 requests an hour per IP (more on paid plans). When a limit is reached the tool returns a plain message with the retry time or the upgrade link; nothing is thrown at the protocol level.
 
 `.docx` upload and unlimited checks need a paid plan. See [proofread.law/pricing](https://proofread.law/pricing).
 
@@ -140,8 +152,8 @@ There is also a limit of 20 requests an hour per IP. When a limit is reached the
 
 - The text or file goes to proofread.law, which runs on its own machine, not a cloud provider's API. It is processed in memory and discarded when the report is returned. Only counts (citations, tiers, timing) are logged, never text.
 - A citation string the local register cannot resolve may be looked up in the CourtListener citation API. Only the citation string leaves, never a party name or prose.
-- Deep check (`deep: true`) is opt-in. In that mode the clause before each citation (up to 700 characters) is sent to a model judge, together with the cited opinion. That is the only mode in which any of the document's prose leaves proofread.law.
-- This server stores nothing on disk. It keeps the last 50 reports in memory so `render_report` can be called with a short id; they are gone when the process exits.
+- Deep check (`deep: true`) is opt-in. In that mode the clause before each citation (up to 700 characters) is sent to a model judge, together with the cited opinion. That is the only mode in which any of the document's prose leaves proofread.law. If the deep-check stream stops before every citation was judged, the tool answers with an error that says how many were checked; it never presents a partial deep check as a finished one.
+- This server stores nothing on disk. It keeps the last 50 reports in memory so `render_report` can be called with a short id; they are gone when the process exits. A key from `sign_up` is held in memory only.
 
 ## The coverage caveat
 
@@ -184,7 +196,7 @@ Layout: `src/client.ts` is the typed HTTP client (`/verify`, `/render`, `/api/co
 
 ## Publishing
 
-See [RELEASE.md](RELEASE.md). The package is not on npm yet and the repository is private until the owner makes it public.
+See [RELEASE.md](RELEASE.md): npm, the MCP Registry (`server.json` is in the repository), Anthropic's connector directory and OpenAI.
 
 ## License
 

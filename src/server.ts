@@ -4,7 +4,7 @@ import { configFromEnv, type Config } from "./config.js";
 import { tools } from "./tools/index.js";
 
 export const SERVER_NAME = "proofread-mcp";
-export const SERVER_VERSION = "0.1.0";
+export const SERVER_VERSION = "0.1.1";
 
 export const INSTRUCTIONS =
   "proofread.law checks US case citations against an open register of about 10 million court opinions. " +
@@ -12,7 +12,8 @@ export const INSTRUCTIONS =
   "green = found, white = deep check (does the opinion support the sentence; a review queue, not a verdict). " +
   "Never call a red or orange row invented or untrue: say what was checked and what was found. " +
   "Every result carries a coverage statement; repeat it when reporting to the user. " +
-  "Not covered: Westlaw/Lexis identifiers, statutes, regulations, secondary sources, whether a case is still good law.";
+  "Not covered: Westlaw/Lexis identifiers, statutes, regulations, secondary sources, whether a case is still good law. " +
+  "Without an API key the free tier applies per IP; sign_up creates an account and key for the owner's inbox, billing_link gives the owner a checkout page when a quota is used up.";
 
 export interface ServerOptions {
   config?: Config;

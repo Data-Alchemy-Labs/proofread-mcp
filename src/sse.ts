@@ -1,29 +1,50 @@
+import { ProofreadError } from "./errors.js";
 import type { Report, Row, Summary } from "./types.js";
 
 /**
  * Reads a `POST /verify?deep=1` Server-Sent Events body into one report.
  * Events: `report` (the full report, rows provisional), `row` (one row with `support` filled), `done` ({summary, elapsed_s}).
  * Comment lines (`: keepalive`) are skipped. `onRow` fires as each row arrives.
+ * A stream that ends without `done` is an error carrying the partial report: the deep check did not finish.
  */
 export async function readSseReport(body: ReadableStream<Uint8Array>, onRow?: (row: Row, report: Report) => void): Promise<Report> {
   let report: Report | undefined;
-  for await (const event of sseEvents(body)) {
-    if (event.name === "report") {
-      report = JSON.parse(event.data) as Report;
-    } else if (event.name === "row" && report) {
-      const row = JSON.parse(event.data) as Row;
-      const at = report.rows.findIndex((r) => r.n === row.n);
-      if (at >= 0) report.rows[at] = row;
-      else report.rows.push(row);
-      onRow?.(row, report);
-    } else if (event.name === "done" && report) {
-      const done = JSON.parse(event.data) as { summary?: Summary; elapsed_s?: number };
-      if (done.summary) report.summary = { ...report.summary, ...done.summary };
-      if (done.elapsed_s !== undefined) report.elapsed_s = done.elapsed_s;
+  let rowsSeen = 0;
+  let done = false;
+  try {
+    for await (const event of sseEvents(body)) {
+      if (event.name === "report") {
+        report = JSON.parse(event.data) as Report;
+      } else if (event.name === "row" && report) {
+        const row = JSON.parse(event.data) as Row;
+        const at = report.rows.findIndex((r) => r.n === row.n);
+        if (at >= 0) report.rows[at] = row;
+        else report.rows.push(row);
+        rowsSeen += 1;
+        onRow?.(row, report);
+      } else if (event.name === "done" && report) {
+        const d = JSON.parse(event.data) as { summary?: Summary; elapsed_s?: number };
+        if (d.summary) report.summary = { ...report.summary, ...d.summary };
+        if (d.elapsed_s !== undefined) report.elapsed_s = d.elapsed_s;
+        delete report.summary.deep_pending; // the provisional count; every row has arrived
+        done = true;
+      }
     }
+  } catch (cause) {
+    throw incomplete(report, rowsSeen, cause);
   }
-  if (!report) throw new Error("the event stream ended without a report");
+  if (!report) throw new ProofreadError(0, "stream_incomplete", "proofread.law's deep-check stream ended before it sent a report. Run the check again.");
+  if (!done) throw incomplete(report, rowsSeen);
   return report;
+}
+
+function incomplete(report: Report | undefined, rowsSeen: number, cause?: unknown): ProofreadError {
+  const expected = report?.summary.deep_pending;
+  const how = cause instanceof Error && cause.name !== "TypeError" ? ` (${cause.name === "TimeoutError" ? "timed out" : cause.message})` : "";
+  const progress = expected !== undefined ? `${rowsSeen} of ${expected} citations were deep-checked` : `${rowsSeen} citations were deep-checked`;
+  const message = `proofread.law's deep-check stream ${cause ? "was cut" : "ended"} before it finished${how}: ${progress}. ` +
+    "The result is incomplete; run the check again (without deep=true if this keeps happening).";
+  return new ProofreadError(0, "stream_incomplete", message, { rows_seen: rowsSeen, expected, partial: report });
 }
 
 interface SseEvent {

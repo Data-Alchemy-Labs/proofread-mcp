@@ -1,0 +1,41 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Data-Alchemy-Labs/proofread-mcp",
+  "title": "proofread.law",
+  "description": "Check US case citations against an open register of 10 million court opinions, from any MCP client.",
+  "repository": {
+    "url": "https://github.com/Data-Alchemy-Labs/proofread-mcp",
+    "source": "github"
+  },
+  "websiteUrl": "https://proofread.law",
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "proofread-mcp",
+      "version": "0.1.1",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "PROOFREAD_API_KEY",
+          "description": "proofread.law API key (pl_...), from the sign_up tool or https://proofread.law/account. Optional: without it the free tier applies per IP.",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "PROOFREAD_API",
+          "description": "Base URL of the proofread.law API.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string",
+          "default": "https://proofread.law"
+        }
+      ]
+    }
+  ]
+}

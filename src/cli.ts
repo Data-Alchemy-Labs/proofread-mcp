@@ -11,7 +11,8 @@ Usage:
   proofread-mcp --http --port N --host H
 
 Environment:
-  PROOFREAD_API_KEY   Firm plan API key (pl_...). Without it the free tier applies.
+  PROOFREAD_API_KEY   API key (pl_...): from the sign_up tool or https://proofread.law/account. Any plan has keys;
+                      a paid-plan key lifts the free-tier limits. Without a key the free tier applies per IP.
   PROOFREAD_API       Base URL (default https://proofread.law).
 `;
 
@@ -56,7 +57,13 @@ async function main(): Promise<void> {
     console.error(`proofread-mcp listening on ${url}`); // stderr: stdout stays clean in both modes
     return;
   }
+  // The client owns this process: when it goes away (stdin ends, or stdout breaks), stop, including any request still in flight.
+  process.stdout.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EPIPE") process.exit(0);
+    throw err;
+  });
   const server = createServer();
+  server.server.onclose = () => process.exit(0);
   await server.connect(new StdioServerTransport());
 }
 

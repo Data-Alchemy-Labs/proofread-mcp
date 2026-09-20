@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { anySignal, createClient, verifyPath } from "../src/client.js";
 import { ProofreadError } from "../src/errors.js";
-import { error402, error429, mockFetch, resolveBatch, resolveResult, sampleReport, sseBody } from "./helpers.js";
+import { brokenBody, error402, error429, mockFetch, resolveBatch, resolveResult, sampleReport, sseBody } from "./helpers.js";
 
 const cfg = { baseUrl: "https://api.test" };
 
@@ -32,6 +32,36 @@ describe("verifyText", () => {
     expect((b.calls[0]!.init.headers as Record<string, string>).Authorization).toBe("Bearer pl_abc_def");
   });
 
+  it("a deep stream that ends without done is an error carrying the partial report, never a clean check", async () => {
+    const provisional = { ...sampleReport(), mode: "deep" as const };
+    provisional.summary.deep_pending = 3;
+    const only = `event: report\ndata: ${JSON.stringify(provisional)}\n\n`;
+    const { fetch } = mockFetch({ text: only, headers: { "content-type": "text/event-stream" } });
+    const err = await createClient(cfg, fetch).verifyText("x", { deep: true, onRow: () => {} }).catch((e) => e);
+    expect(err).toBeInstanceOf(ProofreadError);
+    expect(err.code).toBe("stream_incomplete");
+    expect(err.message).toBe("proofread.law's deep-check stream ended before it finished: 0 of 3 citations were deep-checked. The result is incomplete; run the check again (without deep=true if this keeps happening).");
+    expect(err.info.partial.rows).toHaveLength(4);
+  });
+
+  it("a deep stream cut mid-row says so with the count so far", async () => {
+    const provisional = { ...sampleReport(), mode: "deep" as const };
+    provisional.summary.deep_pending = 2;
+    const row = { ...provisional.rows[3]!, tier: "white" as const, support: { status: "confirmed" as const } };
+    const chunks = [`event: report\ndata: ${JSON.stringify(provisional)}\n\n`, `event: row\ndata: ${JSON.stringify(row)}\n\n`, "event: row\ndata: {\"n\":"];
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        const next = chunks.shift();
+        if (next === undefined) controller.error(new TypeError("terminated"));
+        else controller.enqueue(new TextEncoder().encode(next));
+      },
+    });
+    const { fetch } = mockFetch({ response: new Response(stream, { status: 200, headers: { "content-type": "text/event-stream" } }) });
+    const err = await createClient(cfg, fetch).verifyText("x", { deep: true, onRow: () => {} }).catch((e) => e);
+    expect(err.code).toBe("stream_incomplete");
+    expect(err.message).toMatch(/^proofread.law's deep-check stream was cut before it finished: 1 of 2 citations were deep-checked\./);
+  });
+
   it("deep with onRow reads the SSE stream, merges rows and the done summary", async () => {
     const provisional = sampleReport();
     provisional.mode = "deep";
@@ -47,6 +77,7 @@ describe("verifyText", () => {
     expect(report.summary.white).toBe(1);
     expect(report.summary.red).toBe(1); // untouched keys survive the merge
     expect(report.elapsed_s).toBe(3.9);
+    expect(report.summary.deep_pending).toBeUndefined(); // the provisional count is gone once every row arrived
   });
 
   it("deep without onRow asks for one JSON", async () => {
@@ -98,6 +129,39 @@ describe("verifyText", () => {
     expect(signal.aborted).toBe(false);
     controller.abort(new Error("stop"));
     expect(signal.aborted).toBe(true);
+  });
+
+  it("a 200 that is not JSON (maintenance page) is a clear error, not a parse exception", async () => {
+    const { fetch } = mockFetch({ text: "<html><body>maintenance</body></html>", headers: { "content-type": "text/html; charset=utf-8" } });
+    const err = await createClient(cfg, fetch).verifyText("x").catch((e) => e);
+    expect(err.code).toBe("bad_content_type");
+    expect(err.message).toBe("proofread.law answered HTTP 200 with text/html instead of JSON; the service may be behind a maintenance or challenge page. Try again in a minute.");
+  });
+
+  it("a 200 with an unexpected shape ({} or rows: null) is a clear error", async () => {
+    expect((await createClient(cfg, mockFetch({ body: {} }).fetch).verifyText("x").catch((e) => e)).message).toContain("unexpected shape (no summary)");
+    const rowsNull = { ...sampleReport(), rows: null };
+    expect((await createClient(cfg, mockFetch({ body: rowsNull }).fetch).verifyText("x").catch((e) => e)).message).toContain("unexpected shape (rows is not a list)");
+    expect((await createClient(cfg, mockFetch({ body: { ok: true } }).fetch).coverage().catch((e) => e)).code).toBe("bad_shape");
+  });
+
+  it("a body that stalls until the timeout is a timeout; a cut body is a dropped connection", async () => {
+    const stalled = mockFetch({ response: brokenBody(new DOMException("The operation was aborted due to timeout", "TimeoutError")) });
+    const t = await createClient(cfg, stalled.fetch).verifyText("x").catch((e) => e);
+    expect(t.code).toBe("timeout");
+    expect(t.message).toContain("no complete answer from https://api.test in time");
+    const cut = mockFetch({ response: brokenBody(new TypeError("terminated")) });
+    const c = await createClient(cfg, cut.fetch).coverage().catch((e) => e);
+    expect(c.code).toBe("connection_dropped");
+    expect(c.message).toContain("dropped while the answer was being read: terminated");
+    const md = mockFetch({ response: brokenBody(new DOMException("x", "AbortError"), "text/markdown") });
+    expect((await createClient(cfg, md.fetch).renderMarkdown(sampleReport()).catch((e) => e)).code).toBe("cancelled");
+  });
+
+  it("network failures carry undici's cause code", async () => {
+    const { fetch } = mockFetch({ throws: new TypeError("fetch failed", { cause: { code: "ECONNREFUSED", message: "connect ECONNREFUSED 127.0.0.1:8010" } }) });
+    const err = await createClient(cfg, fetch).verifyText("x").catch((e) => e);
+    expect(err.message).toBe("Could not reach https://api.test: fetch failed (ECONNREFUSED)");
   });
 
   it("gives a generic code when the error body is not the envelope", async () => {
@@ -198,5 +262,45 @@ describe("anySignal", () => {
         Object.defineProperty(AbortSignal, "any", { value: native, configurable: true });
       }
     }
+  });
+});
+
+describe("signUp, checkoutLink and the key", () => {
+  const signup = { api_key: "pl_new_key_value", key_prefix: "pl_new", plan: "free", email: "owner@firm.com", agent_name: "Claude", limits: { checks_per_month: 20, deep_checks_per_month: 3, resolves_per_month: 1000 } };
+
+  it("signUp posts email and agent_name, reports created on 201, and the key is used afterwards once set", async () => {
+    const { fetch, calls } = mockFetch({ status: 201, body: signup }, { body: { coverage: "C", storage: "S" } });
+    const c = createClient(cfg, fetch);
+    expect(c.hasApiKey()).toBe(false);
+    const { created, result } = await c.signUp("owner@firm.com", "Claude");
+    expect(created).toBe(true);
+    expect(result.api_key).toBe("pl_new_key_value");
+    expect(calls[0]?.url).toBe("https://api.test/agent/signup");
+    expect(JSON.parse(String(calls[0]!.init.body))).toEqual({ email: "owner@firm.com", agent_name: "Claude" });
+    expect((calls[0]!.init.headers as Record<string, string>).Authorization).toBeUndefined();
+    c.setApiKey(result.api_key);
+    expect(c.hasApiKey()).toBe(true);
+    await c.coverage();
+    expect((calls[1]!.init.headers as Record<string, string>).Authorization).toBe("Bearer pl_new_key_value");
+  });
+
+  it("signUp reports a rotated key on 200 and maps 400 bad_email, 409 exists, 429", async () => {
+    const { fetch } = mockFetch({ status: 200, body: signup });
+    expect((await createClient(cfg, fetch).signUp("owner@firm.com", "Claude")).created).toBe(false);
+    const bad = mockFetch({ status: 400, body: { error: { code: "bad_email", message: "use the account owner's real inbox; placeholder domains are rejected" } } });
+    expect((await createClient(cfg, bad.fetch).signUp("x@example.com", "a").catch((e) => e)).code).toBe("bad_email");
+    const exists = mockFetch({ status: 409, body: { error: { code: "exists", message: "this address already has a confirmed or paying account" } } });
+    expect((await createClient(cfg, exists.fetch).signUp("x@firm.com", "a").catch((e) => e)).code).toBe("exists");
+    const limited = mockFetch({ status: 429, body: { error: { code: "rate_limited", message: "5 sign-ups per hour per client; try again in 100 s", retry_after: 100 } } });
+    expect((await createClient(cfg, limited.fetch).signUp("x@firm.com", "a").catch((e) => e)).code).toBe("rate_limited");
+  });
+
+  it("checkoutLink posts the plan with the key and returns the url", async () => {
+    const { fetch, calls } = mockFetch({ body: { checkout_url: "https://checkout.stripe.com/c/pay/cs_test_1", plan: "payg", note: "Open this in a browser." } });
+    const link = await createClient({ ...cfg, apiKey: "pl_k" }, fetch).checkoutLink("payg");
+    expect(link.checkout_url).toBe("https://checkout.stripe.com/c/pay/cs_test_1");
+    expect(calls[0]?.url).toBe("https://api.test/agent/checkout-link");
+    expect(JSON.parse(String(calls[0]!.init.body))).toEqual({ plan: "payg" });
+    expect((calls[0]!.init.headers as Record<string, string>).Authorization).toBe("Bearer pl_k");
   });
 });

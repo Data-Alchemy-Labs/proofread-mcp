@@ -134,3 +134,21 @@ export interface ResolveBatch {
   plan?: string;
   elapsed_s?: number;
 }
+
+// Agent onboarding (POST /agent/signup, POST /agent/checkout-link).
+
+export interface SignupResult {
+  api_key: string;
+  key_prefix?: string;
+  plan?: string;
+  email?: string;
+  agent_name?: string;
+  limits?: { checks_per_month?: number; deep_checks_per_month?: number; resolves_per_month?: number; requests_per_hour?: number };
+  [key: string]: unknown;
+}
+
+export interface CheckoutLink {
+  checkout_url: string;
+  plan?: string;
+  note?: string;
+}

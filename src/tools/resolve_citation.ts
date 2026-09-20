@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { formatResolve } from "../resolve_format.js";
-import { LIMITS_NOTE, defineTool, fail, ok } from "./tool.js";
+import { KEY_NOTE, LIMITS_NOTE, defineTool, fail, ok } from "./tool.js";
 
 export const resolveCitation = defineTool({
   name: "resolve_citation",
@@ -12,7 +12,7 @@ export const resolveCitation = defineTool({
     "Statuses: found; ambiguous (several entries, candidates listed); not in the register (a register fact with a coverage qualifier, never proof that the case does not exist); " +
     "cannot verify (a Westlaw/Lexis identifier, or a volume the register cannot see yet); known citation (other opinions cite it, the opinion itself is not held); no citation recognised. " +
     "Use it when one citation is in doubt; use check_citations for prose, and resolve_citations for a list. " +
-    LIMITS_NOTE + " Counts against the resolve quota (1,000 a month free), not the check quota.",
+    LIMITS_NOTE + " Counts against the resolve quota (1,000 a month free), not the check quota. " + KEY_NOTE,
   inputSchema: {
     citation: z.string().min(3).max(500).describe("One citation string. A case name and year around it are fine; only the reporter citation is resolved."),
   },

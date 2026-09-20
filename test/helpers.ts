@@ -42,6 +42,8 @@ export interface Canned {
   headers?: Record<string, string>;
   /** Throw instead of answering (network failure). */
   throws?: Error;
+  /** A hand-built Response (for bodies that fail while being read). */
+  response?: Response;
 }
 
 /** A fetch stub: answers each call from the queue in order (the last answer repeats) and records what was sent. */
@@ -52,6 +54,7 @@ export function mockFetch(...answers: Canned[]): { fetch: FetchLike; calls: Call
     calls.push({ url: String(input), init });
     const a = answers[Math.min(i++, answers.length - 1)] ?? {};
     if (a.throws) throw a.throws;
+    if (a.response) return a.response;
     const status = a.status ?? 200;
     const headers = new Headers(a.headers ?? {});
     if (a.text !== undefined) {
@@ -72,10 +75,24 @@ export function sseBody(report: Report, rows: Report["rows"], done: Record<strin
   return parts.join("");
 }
 
+/** A response whose body read fails (the headers arrived, the body did not). */
+export function brokenBody(error: Error, contentType = "application/json"): Response {
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.error(error);
+    },
+  });
+  return new Response(stream, { status: 200, headers: { "content-type": contentType } });
+}
+
 /** A real MCP client wired to a real server over an in-memory transport, with fetch mocked. */
 export async function connectedClient(...answers: Canned[]): Promise<{ mcp: Client; calls: Call[]; close(): Promise<void> }> {
+  return connectedClientWith({ apiKey: "pl_test_key" }, ...answers);
+}
+
+export async function connectedClientWith(config: { apiKey?: string }, ...answers: Canned[]): Promise<{ mcp: Client; calls: Call[]; close(): Promise<void> }> {
   const { fetch, calls } = mockFetch(...answers);
-  const api = createClient({ baseUrl: "https://api.test", apiKey: "pl_test_key" }, fetch);
+  const api = createClient({ baseUrl: "https://api.test", ...config }, fetch);
   const server = createServer({ client: api });
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
   await server.connect(serverSide);

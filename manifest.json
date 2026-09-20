@@ -1,0 +1,65 @@
+{
+  "manifest_version": "0.3",
+  "name": "proofread-mcp",
+  "display_name": "proofread.law",
+  "version": "0.1.2",
+  "description": "Check US case citations against an open register of 10 million court opinions.",
+  "long_description": "proofread.law checks every case citation in a draft against an open register of about 10 million US court opinions (CourtListener bulk data). Each row comes back as red (check this: the register holds something concrete that disagrees), orange (cannot verify: nothing to check against, such as a Westlaw or Lexis identifier), green (found) or, with the opt-in deep check, whether the opinion supports the sentence it is cited for. Every result carries the coverage statement. Nothing you submit is stored. Not covered: Westlaw/Lexis identifiers, statutes, regulations, secondary sources, whether a case is still good law.",
+  "author": {
+    "name": "Data Alchemy Labs",
+    "email": "hello@proofread.law",
+    "url": "https://proofread.law"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Data-Alchemy-Labs/proofread-mcp"
+  },
+  "homepage": "https://proofread.law",
+  "documentation": "https://github.com/Data-Alchemy-Labs/proofread-mcp#readme",
+  "support": "https://github.com/Data-Alchemy-Labs/proofread-mcp/issues",
+  "icon": "icon.png",
+  "icons": [
+    { "src": "icon.png", "size": "512x512" }
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "dist/cli.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/cli.js"],
+      "env": {
+        "PROOFREAD_API_KEY": "${user_config.api_key}"
+      }
+    }
+  },
+  "tools": [
+    { "name": "check_citations", "description": "Check the case citations in a text; red, orange, green rows with the coverage statement" },
+    { "name": "check_document", "description": "Check the case citations in a PDF, DOCX, TXT or Markdown file on disk" },
+    { "name": "resolve_citation", "description": "Look up one citation in the register: which case, court, date, parallel citations, coverage" },
+    { "name": "resolve_citations", "description": "Look up a list of up to 500 citations in one call" },
+    { "name": "coverage", "description": "What the register holds and cannot check, and the storage notice" },
+    { "name": "render_report", "description": "Render a finished check as a markdown diligence report" },
+    { "name": "sign_up", "description": "Create a proofread.law account and API key for the owner's inbox" },
+    { "name": "billing_link", "description": "Get a Stripe Checkout link for a paid plan" }
+  ],
+  "tools_generated": false,
+  "keywords": ["legal", "citations", "case-law", "proofreading", "courtlistener", "briefs"],
+  "license": "MIT",
+  "privacy_policies": ["https://proofread.law/privacy"],
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=20.0.0"
+    }
+  },
+  "user_config": {
+    "api_key": {
+      "type": "string",
+      "title": "proofread.law API key",
+      "description": "Optional. A key (pl_...) from https://proofread.law/account or the sign_up tool. Without it the free tier applies per IP address. Sent only to proofread.law.",
+      "sensitive": true,
+      "required": false
+    }
+  }
+}

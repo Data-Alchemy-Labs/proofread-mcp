@@ -3,7 +3,7 @@ import { ProofreadError } from "./errors.js";
 import { readSseReport } from "./sse.js";
 import type { CheckoutLink, Coverage, Report, ResolveBatch, ResolveResult, Row, SignupResult } from "./types.js";
 
-export const USER_AGENT = "proofread-mcp/0.1.1 (+https://github.com/Data-Alchemy-Labs/proofread-mcp)";
+export const USER_AGENT = "proofread-mcp/0.1.2 (+https://github.com/Data-Alchemy-Labs/proofread-mcp)";
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 export const MAX_BATCH_CITES = 500;
 

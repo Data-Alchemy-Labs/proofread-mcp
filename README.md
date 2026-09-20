@@ -38,7 +38,13 @@ What it cannot do: resolve Westlaw (WL) or Lexis identifiers, check statutes, re
 
 Needs Node 20 or newer. No install step is required; `npx` fetches [proofread-mcp from npm](https://www.npmjs.com/package/proofread-mcp).
 
-### Claude Desktop
+### Claude Desktop (extension bundle)
+
+Download `proofread-mcp-<version>.mcpb` from the [latest GitHub release](https://github.com/Data-Alchemy-Labs/proofread-mcp/releases/latest) and open it with Claude Desktop (double-click, or Settings, Extensions, Install Extension). The bundle carries the server and its dependencies and uses the Node runtime that ships with Claude Desktop, so nothing else has to be installed. The only setting is the optional API key, stored by Claude Desktop as a sensitive value and passed to the server as `PROOFREAD_API_KEY`.
+
+To build the bundle yourself: `scripts/build-mcpb.sh` (needs `npx @anthropic-ai/mcpb`) writes `build/proofread-mcp-<version>.mcpb` from `manifest.json`, `icon.png` and the npm package contents.
+
+### Claude Desktop (config file)
 
 Edit `claude_desktop_config.json` (Settings, Developer, Edit Config):
 
@@ -148,12 +154,16 @@ There is also a limit of 20 requests an hour per IP (more on paid plans). When a
 
 `.docx` upload and unlimited checks need a paid plan. See [proofread.law/pricing](https://proofread.law/pricing).
 
-## Privacy
+## Privacy Policy
 
-- The text or file goes to proofread.law, which runs on its own machine, not a cloud provider's API. It is processed in memory and discarded when the report is returned. Only counts (citations, tiers, timing) are logged, never text.
-- A citation string the local register cannot resolve may be looked up in the CourtListener citation API. Only the citation string leaves, never a party name or prose.
-- Deep check (`deep: true`) is opt-in. In that mode the clause before each citation (up to 700 characters) is sent to a model judge, together with the cited opinion. That is the only mode in which any of the document's prose leaves proofread.law. If the deep-check stream stops before every citation was judged, the tool answers with an error that says how many were checked; it never presents a partial deep check as a finished one.
-- This server stores nothing on disk. It keeps the last 50 reports in memory so `render_report` can be called with a short id; they are gone when the process exits. A key from `sign_up` is held in memory only.
+The full policy is at [proofread.law/privacy](https://proofread.law/privacy). What applies to this server:
+
+- **What is collected.** The text or file you check leaves your machine and goes to proofread.law's own server (`PROOFREAD_API`, default `https://proofread.law`), over HTTPS, in the request that checks it. `sign_up` sends the account owner's email address and the agent name you give it. Nothing else is sent: no conversation history, no other files, no telemetry.
+- **Use and storage on proofread.law.** The input is processed in memory and discarded when the report is returned; no copy is written to disk. The log line per request carries the kind of input, its size, the number of citations, the tier counts and the time taken, never a citation, a party name or a word of text. With an account, proofread.law keeps the email address, the plan, a monthly count of checks and a hash of each API key.
+- **Third parties.** A citation string the register cannot resolve may be looked up in CourtListener's citation API (the citation string only, never prose). Deep check (`deep: true`) is opt-in: the clause before each citation (up to 700 characters) and the cited opinion go to the model judge; that is the only mode in which words from your document leave proofread.law. Sign-in links go through Resend; payments through Stripe, which sees the card and proofread.law does not. Requests pass through Cloudflare's edge in transit.
+- **Retention.** Inputs and reports: none. Account records: until the owner asks for deletion at privacy@proofread.law.
+- **This server.** It stores nothing on disk. It keeps the last 50 reports in memory so `render_report` can be called with a short id; they are gone when the process exits. The API key lives in your MCP client's configuration (Claude Desktop stores the extension's key as a sensitive setting); a key from `sign_up` is held in memory for the session and shown to you once so you can store it. It is sent only to `PROOFREAD_API`, as an `Authorization: Bearer` header. If a deep-check stream stops before every citation was judged, the tool answers with an error that says how many were checked; it never presents a partial deep check as a finished one.
+- **Contact.** Data Alchemy Labs, privacy@proofread.law.
 
 ## The coverage caveat
 
@@ -196,7 +206,7 @@ Layout: `src/client.ts` is the typed HTTP client (`/verify`, `/render`, `/api/co
 
 ## Publishing
 
-See [RELEASE.md](RELEASE.md): npm, the MCP Registry (`server.json` is in the repository), Anthropic's connector directory and OpenAI.
+See [RELEASE.md](RELEASE.md): npm, the MCP Registry (`server.json` is in the repository), the Claude Desktop extension bundle (`manifest.json`, `scripts/build-mcpb.sh`, attached to each GitHub release) and Anthropic's connector directory.
 
 ## License
 

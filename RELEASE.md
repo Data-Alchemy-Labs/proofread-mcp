@@ -52,12 +52,18 @@ curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.Dat
 Each release: bump `version` in `server.json` (top level and `packages[0].version`) together with `package.json`, publish to npm,
 then `mcp-publisher publish` again. The registry is in preview; expect breaking changes.
 
-### 4b. Anthropic
+### 4b. Anthropic (Claude Desktop extension, connectors directory)
 
-- Claude Desktop connector directory needs a `.mcpb` bundle: `npx @anthropic-ai/mcpb init` in a clean checkout, then
-  `npx @anthropic-ai/mcpb pack`, and submit at https://claude.com/partners/mcp (the directory intake; Anthropic's review
-  requirements are listed there). Nothing is built yet.
-- Claude Code and claude.ai users install from npm today (README snippets).
+- The bundle: `scripts/build-mcpb.sh` -> `build/proofread-mcp-<version>.mcpb` (manifest.json at the repo root, manifest_version 0.3,
+  `privacy_policies` set, tools listed, `user_config.api_key` sensitive and optional). Attach it to the GitHub release:
+  `gh release create v<version> build/proofread-mcp-<version>.mcpb --title "proofread-mcp <version>" --notes "..."`.
+  It is never in the npm tarball (`files` in package.json).
+- Submit the bundle through the desktop extension form: https://clau.de/desktop-extention-submission. Requirements (claude.com/docs/connectors/building/submission
+  and /review-criteria): every tool has `title` and `readOnlyHint`/`destructiveHint` (done), a "Privacy Policy" section in README.md
+  and `privacy_policies` in manifest.json (done), public documentation (the README), test credentials for a fully populated account
+  (create a proofread.law account for the reviewer, ideally on a paid plan so .docx and deep checks work), and the MCPB open-source
+  and "spec will evolve" clauses of the Software Directory Terms (not waivable). Exercise every tool in MCP Inspector first.
+- Claude Code and claude.ai users install from npm (README snippets).
 
 ### 4c. OpenAI
 
@@ -71,4 +77,4 @@ then `mcp-publisher publish` again. The registry is in preview; expect breaking 
 
 ## 5. Version bumps
 
-`package.json` `version`, `server.json` (`version` and `packages[0].version`), `src/server.ts` `SERVER_VERSION`, `src/client.ts` `USER_AGENT`. Tag `v<version>` after publishing.
+`package.json` `version`, `server.json` (`version` and `packages[0].version`), `manifest.json` `version`, `src/server.ts` `SERVER_VERSION`, `src/client.ts` `USER_AGENT`. Tag `v<version>` after publishing; `test/manifest.test.ts` fails if they disagree.

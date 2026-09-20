@@ -26,14 +26,16 @@
     "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
-    "mcp",
-    "model-context-protocol",
-    "legal",
+    "case-law",
     "citations",
-    "proofread.law",
     "claude",
     "cursor",
-    "openai"
+    "legal",
+    "mcp",
+    "model-context-protocol",
+    "openai",
+    "proofread",
+    "proofread.law"
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
@@ -43,5 +45,13 @@
     "@types/node": "^26.6.2",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Data-Alchemy-Labs/proofread-mcp.git"
+  },
+  "homepage": "https://github.com/Data-Alchemy-Labs/proofread-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/Data-Alchemy-Labs/proofread-mcp/issues"
   }
 }

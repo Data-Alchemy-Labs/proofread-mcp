@@ -1,9 +1,9 @@
 import type { Config } from "./config.js";
 import { ProofreadError } from "./errors.js";
 import { readSseReport } from "./sse.js";
-import type { CheckoutLink, Coverage, Report, ResolveBatch, ResolveResult, Row, SignupResult } from "./types.js";
+import type { CheckoutLink, Coverage, CoverageCh, Report, ResolveBatch, ResolveResult, Row, SignupResult } from "./types.js";
 
-export const USER_AGENT = "proofread-mcp/0.1.3 (+https://github.com/Data-Alchemy-Labs/proofread-mcp)";
+export const USER_AGENT = "proofread-mcp/0.1.4 (+https://github.com/Data-Alchemy-Labs/proofread-mcp)";
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 export const MAX_BATCH_CITES = 500;
 
@@ -32,6 +32,7 @@ export interface Client {
   resolveBatch(cites: string[], signal?: AbortSignal): Promise<ResolveBatch>;
   renderMarkdown(report: Report, signal?: AbortSignal): Promise<string>;
   coverage(signal?: AbortSignal): Promise<Coverage>;
+  coverageCh(signal?: AbortSignal): Promise<CoverageCh>;
   /** POST /agent/signup: an account and a key for the owner's inbox. `created` is false when an existing unconfirmed account's key was rotated. */
   signUp(email: string, agentName: string, signal?: AbortSignal): Promise<{ created: boolean; result: SignupResult }>;
   /** POST /agent/checkout-link with the key: a Stripe Checkout page for the owner. */
@@ -136,6 +137,11 @@ export function createClient(config: Config, fetchImpl: FetchLike = globalThis.f
     async coverage(signal) {
       const res = await call("/api/coverage", { method: "GET", headers: headers() }, DEFAULT_TIMEOUT_MS, signal);
       return json<Coverage>(res, (v) => (isObject(v) && typeof v.coverage === "string" ? undefined : "no coverage statement"));
+    },
+
+    async coverageCh(signal) {
+      const res = await call("/v1/coverage?jurisdiction=ch", { method: "GET", headers: headers() }, DEFAULT_TIMEOUT_MS, signal);
+      return json<CoverageCh>(res, (v) => (isObject(v) && typeof v.storage === "string" ? undefined : "no coverage answer"));
     },
 
     async signUp(email, agentName, signal) {

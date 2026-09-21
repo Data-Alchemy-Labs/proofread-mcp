@@ -1,6 +1,6 @@
 # proofread-mcp
 
-An MCP server for [proofread.law](https://proofread.law). It lets Claude Desktop, Claude Code, Cursor and the OpenAI Agents SDK check US case citations before a draft is filed.
+An MCP server for [proofread.law](https://proofread.law). It lets Claude Desktop, Claude Code, Cursor and the OpenAI Agents SDK check case citations before a draft is filed: about 10 million US court opinions, and 1.1 million Swiss decisions (BGE/ATF/DTF, Federal Supreme Court dockets, the federal courts and all 26 cantons). The jurisdiction is detected from the draft, and a Swiss report comes back in the draft's language: German, French or Italian.
 
 proofread.law checks each citation against an open register of about 10 million court opinions (CourtListener bulk data). Every result says what was checked, what was found, and what the register cannot see.
 
@@ -14,7 +14,7 @@ Eight tools:
 | `check_document` | path to a `.pdf`, `.docx`, `.txt` or `.md` (up to 10 MB), `deep` (optional) | The same, for a file on disk |
 | `resolve_citation` | one citation string | The register's answer for that citation: found (case, court, date, parallel citations, link), ambiguous (candidates), not in the register, cannot verify, known citation, or no citation recognised; the coverage of that volume; the coverage statement |
 | `resolve_citations` | a list of up to 500 citation strings | Counts by status, one line per citation in input order, the coverage statement |
-| `coverage` | nothing | The coverage statement and the storage notice |
+| `coverage` | `jurisdiction` (optional: `us` or `ch`) | The coverage statement and the storage notice; `ch` gives the Swiss register with the courts held and the share of the live index each covers |
 | `render_report` | a report id from a previous check, or the full report JSON | A markdown diligence report with every row |
 | `sign_up` | the account owner's email, a name for the agent | A proofread.law account and an API key (shown once); the server uses it for the rest of the session |
 | `billing_link` | `payg`, `solo` or `firm` | A Stripe Checkout link for the account owner; needs an API key |

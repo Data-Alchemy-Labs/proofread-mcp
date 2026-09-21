@@ -75,6 +75,15 @@ export interface Coverage {
   storage: string;
 }
 
+/** GET /v1/coverage?jurisdiction=ch: the Swiss register per court, with the share of the live index each court's holdings represent. */
+export interface CoverageCh {
+  statement: string | null;
+  storage: string;
+  available: boolean;
+  freshness?: { dump?: string | null; live_index_checked?: string | null; schema?: number | null };
+  courts?: { court: string; decisions: number; from?: string | null; to?: string | null; live_index_share?: number | null }[];
+}
+
 /** The error envelope every non-2xx answer carries: {"error": {"code", "message", ...}}. */
 export interface ApiErrorBody {
   error: {

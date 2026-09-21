@@ -4,10 +4,11 @@ import { configFromEnv, type Config } from "./config.js";
 import { tools } from "./tools/index.js";
 
 export const SERVER_NAME = "proofread-mcp";
-export const SERVER_VERSION = "0.1.3";
+export const SERVER_VERSION = "0.1.4";
 
 export const INSTRUCTIONS =
-  "proofread.law checks US case citations against an open register of about 10 million court opinions. " +
+  "proofread.law checks case citations against open registers: about 10 million US court opinions, and 1.1 million Swiss decisions (BGE/ATF/DTF, Federal Supreme Court dockets, the federal courts and all 26 cantons). "
+  + "The jurisdiction is detected from the draft; a Swiss report comes back in the draft's language (German, French or Italian). " +
   "Tiers: red = check this (the register holds something concrete that disagrees), orange = cannot verify (nothing to check against; not evidence either way), " +
   "green = found, white = deep check (does the opinion support the sentence; a review queue, not a verdict). " +
   "Never call a red or orange row invented or untrue: say what was checked and what was found. " +

@@ -239,7 +239,7 @@ describe("coverage", () => {
     session = await connectedClient({ body: { coverage: "Checked against N cases", storage: "Nothing you submit is stored." } });
     const result = await session.mcp.callTool({ name: "coverage", arguments: {} });
     expect(textOf(result)).toBe("Coverage: Checked against N cases\nStorage: Nothing you submit is stored.");
-    expect(result.structuredContent).toEqual({ coverage: "Checked against N cases", storage: "Nothing you submit is stored." });
+    expect(result.structuredContent).toEqual({ coverage: "Checked against N cases", storage: "Nothing you submit is stored.", jurisdiction: "us" });
   });
 
   it("402, 429 and network errors surface", async () => {
@@ -362,5 +362,32 @@ describe("billing_link", () => {
     expect(textOf(await call())).toBe("proofread.law: billing is not switched on yet. Try again later, or the owner can subscribe at https://proofread.law/pricing.");
     expect(textOf(await call())).toContain("rate limit");
     expect(textOf(await call())).toContain("Could not reach");
+  });
+});
+
+describe("coverage, Swiss", () => {
+  it("asks /v1/coverage?jurisdiction=ch and lists the courts held", async () => {
+    session = await connectedClient({
+      body: {
+        statement: "Swiss register: 1,147,178 decisions …", storage: "Nothing you submit is stored.", available: true, jurisdiction: "ch",
+        freshness: { dump: "2026-09-19", live_index_checked: "2026-09-21", schema: 2 },
+        courts: [{ court: "bger", decisions: 193389, from: "1986-10-06", to: "2026-09-10", live_index_share: 0.9995 },
+                 { court: "ge_gerichte", decisions: 170462, from: null, to: null, live_index_share: null }],
+      },
+    });
+    const result = await session.mcp.callTool({ name: "coverage", arguments: { jurisdiction: "ch" } });
+    expect(session.calls[0].url).toContain("/v1/coverage?jurisdiction=ch");
+    const text = (result.content as { text: string }[])[0].text;
+    expect(text).toContain("Swiss register");
+    expect(text).toContain("bger: 193,389 decisions, from 1986, 99.95% of the live index");
+    expect(text).toContain("ge_gerichte: 170,462 decisions");
+    expect(text).toContain("Source export 2026-09-19, live index checked 2026-09-21");
+    expect((result.structuredContent as { jurisdiction: string }).jurisdiction).toBe("ch");
+  });
+
+  it("without a jurisdiction it still asks /api/coverage", async () => {
+    session = await connectedClient({ body: { coverage: "Checked against N cases", storage: "S" } });
+    await session.mcp.callTool({ name: "coverage", arguments: {} });
+    expect(session.calls[0].url).toContain("/api/coverage");
   });
 });

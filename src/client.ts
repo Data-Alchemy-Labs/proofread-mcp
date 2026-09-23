@@ -45,8 +45,8 @@ export interface Client {
   listBriefs(signal?: AbortSignal): Promise<BriefList>;
   /** GET /v1/briefs/{id}: the saved text, the latest report and the versions. */
   getBrief(id: string, signal?: AbortSignal): Promise<Brief>;
-  /** PUT /v1/briefs/{id}: a new text and/or title; a changed text is re-checked and the previous version kept. */
-  updateBrief(id: string, changes: { text?: string; title?: string }, signal?: AbortSignal): Promise<UpdatedBrief>;
+  /** PUT /v1/briefs/{id}: a new text and/or title; a changed text (or recheck: true) is re-checked and kept as a new version. */
+  updateBrief(id: string, changes: { text?: string; title?: string; recheck?: boolean }, signal?: AbortSignal): Promise<UpdatedBrief>;
   /** GET /v1/briefs/{id}/versions/{v}: one earlier version's text. */
   getBriefVersion(id: string, v: number, signal?: AbortSignal): Promise<BriefVersion>;
   /** DELETE /v1/briefs/{id}: permanent. */
@@ -174,32 +174,37 @@ export function createClient(config: Config, fetchImpl: FetchLike = globalThis.f
     async saveBrief(text, title, signal) {
       const res = await call("/v1/briefs", { method: "POST", headers: headers({ "Content-Type": "application/json" }),
         body: JSON.stringify(title === undefined ? { text } : { text, title }) }, DEFAULT_TIMEOUT_MS, signal);
-      return json<SavedBrief>(res, (v) => (!isObject(v) ? "not an object" : !hasId(v) ? "no brief id" : checkReportShape(v.report)));
+      return withStringId(await json<SavedBrief>(res, (v) => (!isObject(v) ? "not an object" : !hasId(v) ? "no brief id" : checkReportShape(v.report))));
     },
 
     async listBriefs(signal) {
       const res = await call("/v1/briefs", { method: "GET", headers: headers() }, DEFAULT_TIMEOUT_MS, signal);
-      return json<BriefList>(res, (v) => (isObject(v) && Array.isArray(v.briefs) ? undefined : "no briefs list"));
+      const list = await json<BriefList>(res, (v) => {
+        if (!isObject(v) || !Array.isArray(v.briefs)) return "no briefs list";
+        return v.briefs.every((b) => isObject(b) && hasId(b)) ? undefined : "a brief without an id";
+      });
+      return { ...list, briefs: list.briefs.map(withStringId) };
     },
 
     async getBrief(id, signal) {
       const res = await call(briefPath(id), { method: "GET", headers: headers() }, DEFAULT_TIMEOUT_MS, signal);
-      return json<Brief>(res, checkBriefShape);
+      return withStringId(await json<Brief>(res, checkBriefShape));
     },
 
     async updateBrief(id, changes, signal) {
-      const body: Record<string, string> = {};
+      const body: Record<string, string | boolean> = {};
       if (changes.text !== undefined) body.text = changes.text;
       if (changes.title !== undefined) body.title = changes.title;
+      if (changes.recheck === true) body.recheck = true;
       const res = await call(briefPath(id), { method: "PUT", headers: headers({ "Content-Type": "application/json" }), body: JSON.stringify(body) },
         DEFAULT_TIMEOUT_MS, signal);
-      return json<UpdatedBrief>(res, (v) => {
+      return withStringId(await json<UpdatedBrief>(res, (v) => {
         const problem = checkBriefShape(v);
         if (problem) return problem;
         const c = (v as Record<string, unknown>).changes;
         if (c === undefined || c === null) return undefined;
         return isObject(c) && Array.isArray(c.resolved) && Array.isArray(c.new) ? undefined : "changes without resolved and new lists";
-      });
+      }));
     },
 
     async getBriefVersion(id, v, signal) {
@@ -229,6 +234,11 @@ export function verifyPath(deep: boolean, stream: boolean): string {
 function briefPath(id: string): string {
   if (!BRIEF_ID_RE.test(id)) throw new ProofreadError(400, "bad_brief_id", "a brief id is 1 to 128 letters, digits, hyphens or underscores, as save_brief or list_briefs gives it");
   return `/v1/briefs/${encodeURIComponent(id)}`;
+}
+
+/** The API's ids are integers; everything past the client sees a string, the form the tools take and the URL needs. */
+function withStringId<T extends { id: unknown }>(v: T): T & { id: string } {
+  return { ...v, id: String(v.id) };
 }
 
 function hasId(v: Record<string, unknown>): boolean {

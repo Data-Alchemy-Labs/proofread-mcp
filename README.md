@@ -19,7 +19,7 @@ Thirteen tools:
 | `save_brief` | text, `title` (optional) | Saves the brief to the user's account (opt-in, stored encrypted) and checks it: the brief id, then the same compact result as `check_citations` |
 | `list_briefs` | none | The saved briefs: id, title, when saved and last checked, counts per tier, number of versions |
 | `get_brief` | id, `include_text` (default true), `version` (optional) | The saved text, the latest report and the versions kept; with `version`, that earlier text |
-| `update_brief` | id, `text` and/or `title` | Saves the edited text as a new version and re-checks it: the flags resolved since the previous version, the new flags, the unchanged count, then every row that still needs attention. A title alone renames without a check |
+| `update_brief` | id, `text`, `title`, `recheck` (each optional, at least one) | Saves the edited text as a new version and re-checks it: the flags resolved since the previous version, the new flags (each with its headline), the unchanged count, then every row that still needs attention. `recheck: true` re-runs the check on the saved text without editing it, e.g. after the register was updated. A title alone renames without a check |
 | `delete_brief` | id | Permanently deletes the brief and its versions |
 | `sign_up` | the account owner's email, a name for the agent | A proofread.law account and an API key (shown once); the server uses it for the rest of the session |
 | `billing_link` | `payg`, `solo` or `firm` | A Stripe Checkout link for the account owner; needs an API key |
@@ -30,7 +30,7 @@ The compact result of a check is capped at about 12,000 characters; when a long 
 
 Nothing is saved unless `save_brief` or `update_brief` is called; `check_citations` and `check_document` never save anything. A saved brief is stored encrypted in the user's proofread.law account until `delete_brief` removes it, so the brief tools need an API key (any `PROOFREAD_API_KEY`, or one from `sign_up`); without one they answer with a message and send nothing. A server with storage switched off answers `storage_off`, and the tools say so.
 
-The loop for fixing flagged citations: `save_brief` once, fix a flagged row in the text (the citation, the case name, the quotation, or take the citation out), call `update_brief` with the id and the whole edited text, and read what changed: which flags were resolved (flagged before, not flagged now), which are new, and the rows that still need attention. Each version is kept; `get_brief` lists them and reads an earlier one.
+The loop for fixing flagged citations: `save_brief` once, fix a flagged row in the text (the citation, the case name, the quotation, or take the citation out), call `update_brief` with the id and the whole edited text, and read what changed: which flags were resolved (flagged before, not flagged now), which are new, and the rows that still need attention. The last 20 versions are kept; `get_brief` lists them and reads an earlier one. Ids are integers in the API and strings in the tools.
 
 `check_citations` and `check_document` read prose: they compare the case name and any quotation with the register. `resolve_citation` and `resolve_citations` look the citation string up in the register (the `/v1/resolve` API) and tell you which case sits there; they do not compare it with the name you have.
 
@@ -158,7 +158,7 @@ Per month, per IP address without a key or per account with a free-tier key:
 | Tools | Quota |
 |---|---|
 | `check_citations`, `check_document` | 20 checks, of which 3 may be deep checks |
-| `save_brief`, `update_brief` with new text | each runs a default check and counts as one of those checks |
+| `save_brief`, `update_brief` with new text or `recheck` | each runs a default check and counts as one of those checks; a title alone is not counted. Each plan has a cap on saved briefs |
 | `resolve_citation`, `resolve_citations` | 1,000 resolves (each citation in a list counts as one) |
 | `coverage`, `render_report`, `sign_up`, `billing_link` | free, not counted |
 

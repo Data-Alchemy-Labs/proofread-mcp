@@ -166,7 +166,8 @@ export interface CheckoutLink {
 }
 
 // Saved briefs (/v1/briefs): opt-in, stored encrypted in the user's account. The API is newer than the rest, so every field the
-// formatter reads is optional and a missing one is left out of the text rather than guessed.
+// formatter reads is optional and a missing one is left out of the text rather than guessed. The API's ids are integers; the client
+// turns them into strings, so `id` is a string everywhere past it.
 
 /** The counts of a brief's latest check, as in a report's summary. */
 export type BriefSummary = Partial<Summary>;
@@ -177,7 +178,7 @@ export interface BriefVersionInfo {
   summary?: BriefSummary | null;
 }
 
-/** GET /v1/briefs, one entry. `versions` is a count here and a list in GET /v1/briefs/{id}; both are read. */
+/** GET /v1/briefs, one entry. `versions` is a count here and a list (newest first) in GET /v1/briefs/{id}; both are read. */
 export interface BriefListItem {
   id: string;
   title?: string | null;
@@ -192,6 +193,8 @@ export interface BriefListItem {
 
 export interface BriefList {
   briefs: BriefListItem[];
+  /** The plan's cap on saved briefs. */
+  limit?: number;
 }
 
 /** POST /v1/briefs: the new brief and the report of its first check (same shape as POST /verify). */
@@ -218,8 +221,8 @@ export interface Brief {
   [key: string]: unknown;
 }
 
-/** One flag in a PUT's changes: a row as in a report (citation, tier, parties, headline), or a plain citation string. */
-export type BriefChangeItem = string | (Partial<Row> & Record<string, unknown>);
+/** One flag in a PUT's changes: {citation, parties, tier, headline} (fields may be null), or a plain citation string. */
+export type BriefChangeItem = string | { citation?: string | null; parties?: string | null; tier?: Tier | null; headline?: string | null; [key: string]: unknown };
 
 export interface BriefChanges {
   resolved: BriefChangeItem[];

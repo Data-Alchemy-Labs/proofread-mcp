@@ -94,17 +94,32 @@ export function formatBriefVersion(id: string, version: BriefVersion): string {
   ].join("\n");
 }
 
-/** update_brief: what the re-check changed (resolved flags, new flags, unchanged rows), then the rows that still need attention. */
-export function formatUpdatedBrief(updated: UpdatedBrief, reportId: string | undefined, textSent: boolean): string {
+/** What update_brief sent, so the first line can say what happened. */
+export interface UpdateSent {
+  text: boolean;
+  title: boolean;
+  recheck: boolean;
+}
+
+/**
+ * update_brief: what the re-check changed (resolved flags, new flags, unchanged rows), then the rows that still need attention.
+ * Without changes (a title alone, or the same text without recheck) no check ran and no version was added; the line says so.
+ */
+export function formatUpdatedBrief(updated: UpdatedBrief, reportId: string | undefined, sent: UpdateSent): string {
   const latest = latestVersion(updated.versions ?? []);
-  const saved = `brief ${briefLabel(updated)}` + (latest !== undefined ? ` as version ${latest}` : "");
+  const label = briefLabel(updated);
   if (!updated.changes) {
-    const why = textSent
-      ? "proofread.law reported no re-check for this save (the text may be the same as the saved version)"
-      : "only the title changed, so the text was not re-checked";
-    return `Saved ${saved}; ${why}. Latest counts: ${summaryCounts(updated.summary ?? updated.report?.summary)}. get_brief shows the latest report.`;
+    const head = sent.title ? `Renamed brief ${label}` : `Brief ${label} is unchanged`;
+    const why = sent.text
+      ? "the text is the same as the saved version, so it was not re-checked and no version was added (recheck=true re-runs the check)"
+      : "the text did not change, so it was not re-checked and no version was added";
+    return `${head}; ${why}. Latest counts: ${summaryCounts(updated.summary ?? updated.report?.summary)}. get_brief shows the latest report.`;
   }
-  const lines = [`Saved ${saved} and re-checked it.`, ...formatChanges(updated.changes)];
+  const version = latest !== undefined ? ` as version ${latest}` : "";
+  const head = !sent.text && sent.recheck
+    ? `Re-checked the saved text of brief ${label} (kept${version}).`
+    : `Saved brief ${label}${version} and re-checked it.`;
+  const lines = [head, ...formatChanges(updated.changes)];
   if (updated.report) {
     lines.push("Latest check (every row that still needs attention):", formatReport(updated.report, reportId));
   } else {
@@ -122,28 +137,37 @@ export function formatChanges(changes: BriefChanges): string[] {
     lines.push(...capped(changes.resolved.map(resolvedLine), "resolved flag"));
   }
   if (changes.new.length) {
-    lines.push(`New flags (${changes.new.length}): not flagged in the previous version; the details are in the rows below:`);
+    lines.push(`New flags (${changes.new.length}): not flagged in the previous version; the full rows are below:`);
     lines.push(...capped(changes.new.map(newLine), "new flag"));
   }
   return lines;
 }
 
+/** `- 509 U.S. 644 (Bostock v. Clayton County), was check this (red): Register has ... Check the volume.` */
 function resolvedLine(item: BriefChangeItem): string {
   if (typeof item === "string") return `- ${item}`;
   const tier = tierOf(item);
-  return `- ${citeOf(item)}` + (tier ? `: was ${TIER_PHRASE[tier]}` : "");
+  return `- ${citeOf(item)}` + (tier ? `, was ${TIER_PHRASE[tier]}` : "") + headlineOf(item);
 }
 
+/** `- CHECK THIS: 590 U.S. 1 (Doe v. Roe): Register has a different case at 590 U.S. 1. Check the citation.` */
 function newLine(item: BriefChangeItem): string {
   if (typeof item === "string") return `- ${item}`;
   const tier = tierOf(item);
-  return tier ? `- ${TIER_WORD[tier]}: ${citeOf(item)}` : `- ${citeOf(item)}`;
+  return (tier ? `- ${TIER_WORD[tier]}: ${citeOf(item)}` : `- ${citeOf(item)}`) + headlineOf(item);
 }
 
 function citeOf(item: Exclude<BriefChangeItem, string>): string {
-  const cite = typeof item.citation === "string" ? item.citation : typeof item.cite === "string" ? item.cite : "(citation not given)";
+  const cite = typeof item.citation === "string" && item.citation ? item.citation : typeof item.cite === "string" && item.cite ? item.cite : "(citation not given)";
   const who = typeof item.parties === "string" && item.parties ? ` (${item.parties}${typeof item.year === "number" ? `, ${item.year}` : ""})` : "";
   return `${cite}${who}`;
+}
+
+/** The row's headline after a colon, as one sentence; nothing when the item has none. */
+function headlineOf(item: Exclude<BriefChangeItem, string>): string {
+  if (typeof item.headline !== "string" || !item.headline.trim()) return "";
+  const h = item.headline.trim();
+  return `: ${/[.!?]$/.test(h) ? h : `${h}.`}`;
 }
 
 function tierOf(item: Exclude<BriefChangeItem, string>): Tier | undefined {

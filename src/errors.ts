@@ -98,6 +98,8 @@ export function explain(err: unknown): string {
       return `proofread.law: ${err.message}. Try again later, or the owner can subscribe at https://proofread.law/pricing.`;
     case "storage_off":
       return "proofread.law: saved briefs are switched off on this server, so nothing was saved or read. check_citations still checks a text without saving it.";
+    case "brief_limit":
+      return "proofread.law: this plan's saved-brief limit is reached. Delete an old brief with delete_brief, or upgrade at https://proofread.law/pricing.";
     case "bad_brief_id":
       return `proofread.law: ${err.message}. list_briefs shows the ids of the saved briefs.`;
     case "too_large":

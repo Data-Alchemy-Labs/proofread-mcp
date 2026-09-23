@@ -1,11 +1,13 @@
 import type { Config } from "./config.js";
 import { ProofreadError } from "./errors.js";
 import { readSseReport } from "./sse.js";
-import type { CheckoutLink, Coverage, CoverageCh, Report, ResolveBatch, ResolveResult, Row, SignupResult } from "./types.js";
+import type { Brief, BriefList, BriefVersion, CheckoutLink, Coverage, CoverageCh, Report, ResolveBatch, ResolveResult, Row, SavedBrief, SignupResult, UpdatedBrief } from "./types.js";
 
-export const USER_AGENT = "proofread-mcp/0.1.4 (+https://github.com/Data-Alchemy-Labs/proofread-mcp)";
+export const USER_AGENT = "proofread-mcp/0.2.0 (+https://github.com/Data-Alchemy-Labs/proofread-mcp)";
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 export const MAX_BATCH_CITES = 500;
+/** A saved brief's id as it goes into a URL path: letters, digits, hyphens, underscores (no dots, so never `..`). */
+export const BRIEF_ID_RE = /^[A-Za-z0-9_-]{1,128}$/;
 
 /** A default check answers in seconds; a deep check runs 1 to 2 s per citation, four in parallel, up to 15 minutes server-side. */
 const DEFAULT_TIMEOUT_MS = 120_000;
@@ -37,6 +39,18 @@ export interface Client {
   signUp(email: string, agentName: string, signal?: AbortSignal): Promise<{ created: boolean; result: SignupResult }>;
   /** POST /agent/checkout-link with the key: a Stripe Checkout page for the owner. */
   checkoutLink(plan: Plan, signal?: AbortSignal): Promise<CheckoutLink>;
+  /** POST /v1/briefs: store a brief (opt-in, encrypted in the account) and run the default check on it. */
+  saveBrief(text: string, title?: string, signal?: AbortSignal): Promise<SavedBrief>;
+  /** GET /v1/briefs: the account's saved briefs. */
+  listBriefs(signal?: AbortSignal): Promise<BriefList>;
+  /** GET /v1/briefs/{id}: the saved text, the latest report and the versions. */
+  getBrief(id: string, signal?: AbortSignal): Promise<Brief>;
+  /** PUT /v1/briefs/{id}: a new text and/or title; a changed text (or recheck: true) is re-checked and kept as a new version. */
+  updateBrief(id: string, changes: { text?: string; title?: string; recheck?: boolean }, signal?: AbortSignal): Promise<UpdatedBrief>;
+  /** GET /v1/briefs/{id}/versions/{v}: one earlier version's text. */
+  getBriefVersion(id: string, v: number, signal?: AbortSignal): Promise<BriefVersion>;
+  /** DELETE /v1/briefs/{id}: permanent. */
+  deleteBrief(id: string, signal?: AbortSignal): Promise<void>;
   hasApiKey(): boolean;
   /** Adopt a key for the rest of this process (after sign_up); nothing is written to disk. */
   setApiKey(key: string): void;
@@ -157,6 +171,52 @@ export function createClient(config: Config, fetchImpl: FetchLike = globalThis.f
       return json<CheckoutLink>(res, (v) => (isObject(v) && typeof v.checkout_url === "string" ? undefined : "no checkout_url"));
     },
 
+    async saveBrief(text, title, signal) {
+      const res = await call("/v1/briefs", { method: "POST", headers: headers({ "Content-Type": "application/json" }),
+        body: JSON.stringify(title === undefined ? { text } : { text, title }) }, DEFAULT_TIMEOUT_MS, signal);
+      return withStringId(await json<SavedBrief>(res, (v) => (!isObject(v) ? "not an object" : !hasId(v) ? "no brief id" : checkReportShape(v.report))));
+    },
+
+    async listBriefs(signal) {
+      const res = await call("/v1/briefs", { method: "GET", headers: headers() }, DEFAULT_TIMEOUT_MS, signal);
+      const list = await json<BriefList>(res, (v) => {
+        if (!isObject(v) || !Array.isArray(v.briefs)) return "no briefs list";
+        return v.briefs.every((b) => isObject(b) && hasId(b)) ? undefined : "a brief without an id";
+      });
+      return { ...list, briefs: list.briefs.map(withStringId) };
+    },
+
+    async getBrief(id, signal) {
+      const res = await call(briefPath(id), { method: "GET", headers: headers() }, DEFAULT_TIMEOUT_MS, signal);
+      return withStringId(await json<Brief>(res, checkBriefShape));
+    },
+
+    async updateBrief(id, changes, signal) {
+      const body: Record<string, string | boolean> = {};
+      if (changes.text !== undefined) body.text = changes.text;
+      if (changes.title !== undefined) body.title = changes.title;
+      if (changes.recheck === true) body.recheck = true;
+      const res = await call(briefPath(id), { method: "PUT", headers: headers({ "Content-Type": "application/json" }), body: JSON.stringify(body) },
+        DEFAULT_TIMEOUT_MS, signal);
+      return withStringId(await json<UpdatedBrief>(res, (v) => {
+        const problem = checkBriefShape(v);
+        if (problem) return problem;
+        const c = (v as Record<string, unknown>).changes;
+        if (c === undefined || c === null) return undefined;
+        return isObject(c) && Array.isArray(c.resolved) && Array.isArray(c.new) ? undefined : "changes without resolved and new lists";
+      }));
+    },
+
+    async getBriefVersion(id, v, signal) {
+      const res = await call(`${briefPath(id)}/versions/${encodeURIComponent(String(v))}`, { method: "GET", headers: headers() }, DEFAULT_TIMEOUT_MS, signal);
+      return json<BriefVersion>(res, (x) => (isObject(x) && typeof x.text === "string" ? undefined : "no version text"));
+    },
+
+    async deleteBrief(id, signal) {
+      const res = await call(briefPath(id), { method: "DELETE", headers: headers() }, DEFAULT_TIMEOUT_MS, signal);
+      await res.body?.cancel().catch(() => {}); // 204 has no body; anything else is not needed
+    },
+
     hasApiKey: () => Boolean(apiKey),
     setApiKey(key) {
       apiKey = key;
@@ -168,6 +228,29 @@ export function createClient(config: Config, fetchImpl: FetchLike = globalThis.f
 export function verifyPath(deep: boolean, stream: boolean): string {
   if (!deep) return "/verify";
   return stream ? "/verify?deep=1" : "/verify?deep=1&stream=0";
+}
+
+/** Refuses an id that is not a plain token before it becomes part of a URL path. */
+function briefPath(id: string): string {
+  if (!BRIEF_ID_RE.test(id)) throw new ProofreadError(400, "bad_brief_id", "a brief id is 1 to 128 letters, digits, hyphens or underscores, as save_brief or list_briefs gives it");
+  return `/v1/briefs/${encodeURIComponent(id)}`;
+}
+
+/** The API's ids are integers; everything past the client sees a string, the form the tools take and the URL needs. */
+function withStringId<T extends { id: unknown }>(v: T): T & { id: string } {
+  return { ...v, id: String(v.id) };
+}
+
+function hasId(v: Record<string, unknown>): boolean {
+  return (typeof v.id === "string" && v.id.length > 0) || typeof v.id === "number";
+}
+
+/** A brief answer: an id, and a report that has the /verify shape when there is one. */
+function checkBriefShape(v: unknown): string | undefined {
+  if (!isObject(v)) return "not an object";
+  if (!hasId(v)) return "no brief id";
+  if (v.report !== undefined && v.report !== null) return checkReportShape(v.report);
+  return undefined;
 }
 
 function checkReportShape(v: unknown): string | undefined {

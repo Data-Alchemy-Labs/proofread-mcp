@@ -2,7 +2,7 @@ import type { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/proto
 import type { CallToolResult, ServerNotification, ServerRequest, ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import type { z } from "zod";
 import type { Client } from "../client.js";
-import { explain } from "../errors.js";
+import { explain, ProofreadError } from "../errors.js";
 import type { Summary } from "../types.js";
 
 export type ToolExtra = RequestHandlerExtra<ServerRequest, ServerNotification>;
@@ -59,7 +59,7 @@ export function progressReporter(extra: ToolExtra): Progress {
 }
 
 /** The summary as structured content: the API's counts without its internal cost counter. */
-export function publicSummary(summary: Summary): Record<string, unknown> {
+export function publicSummary(summary: Partial<Summary>): Record<string, unknown> {
   const { jev_spent_today_usd: _cost, ...rest } = summary;
   return rest;
 }
@@ -75,3 +75,23 @@ export const DEEP_NOTE =
 
 export const KEY_NOTE =
   "Without an API key the free tier applies per IP address; a key from sign_up (free tier) identifies the account, and a paid-plan key lifts the limits.";
+
+export const BRIEF_NOTE =
+  "Saving is opt-in: nothing is saved unless save_brief or update_brief is called (check_citations and check_document never save anything). " +
+  "A saved brief is stored encrypted in the user's proofread.law account until delete_brief removes it, and needs an API key (PROOFREAD_API_KEY, or one from sign_up).";
+
+/** Checked before any call: a saved brief belongs to an account, so without a key nothing is sent. */
+export const BRIEF_NEEDS_KEY =
+  "Saved briefs live in a proofread.law account, so they need an API key: set PROOFREAD_API_KEY, or call sign_up first to create an account and key. Nothing was sent or saved.";
+
+/** A 404 on a brief route names the id (the API answers 404 for a missing id and for another account's id alike); the rest goes through explain. */
+export function briefFail(err: unknown, where: { id?: string; version?: number } = {}): CallToolResult {
+  if (err instanceof ProofreadError && err.status === 404) {
+    if (where.id && where.version !== undefined) {
+      return fail(`No version ${where.version} of saved brief ${where.id} in this account. get_brief without a version lists the versions kept.`);
+    }
+    if (where.id) return fail(`No saved brief ${where.id} in this account. list_briefs shows the ids of the saved briefs.`);
+    return fail("This proofread.law server does not offer saved briefs (HTTP 404), so nothing was saved. check_citations still checks a text without saving it.");
+  }
+  return fail(err);
+}

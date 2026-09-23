@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "proofread-mcp",
   "display_name": "proofread.law",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Check US and Swiss case citations against open registers of court opinions.",
-  "long_description": "proofread.law checks every case citation in a draft against an open register of about 10 million US court opinions (CourtListener bulk data). Each row comes back as red (check this: the register holds something concrete that disagrees), orange (cannot verify: nothing to check against, such as a Westlaw or Lexis identifier), green (found) or, with the opt-in deep check, whether the opinion supports the sentence it is cited for. Every result carries the coverage statement. Nothing you submit is stored. Not covered: Westlaw/Lexis identifiers, statutes, regulations, secondary sources, whether a case is still good law.",
+  "long_description": "proofread.law checks every case citation in a draft against an open register of about 10 million US court opinions (CourtListener bulk data). Each row comes back as red (check this: the register holds something concrete that disagrees), orange (cannot verify: nothing to check against, such as a Westlaw or Lexis identifier), green (found) or, with the opt-in deep check, whether the opinion supports the sentence it is cited for. Every result carries the coverage statement. A checked text is not stored; saving a brief is opt-in (stored encrypted in your account, deleted when you delete it), so you can edit it and re-check what changed. Not covered: Westlaw/Lexis identifiers, statutes, regulations, secondary sources, whether a case is still good law.",
   "author": {
     "name": "Data Alchemy Labs",
     "email": "hello@proofread.law",
@@ -61,6 +61,26 @@
     {
       "name": "render_report",
       "description": "Render a finished check as a markdown diligence report"
+    },
+    {
+      "name": "save_brief",
+      "description": "Save a brief to the user's account (opt-in, stored encrypted) and check its citations"
+    },
+    {
+      "name": "list_briefs",
+      "description": "List the briefs saved in the user's account"
+    },
+    {
+      "name": "get_brief",
+      "description": "Get a saved brief's text, latest report and versions"
+    },
+    {
+      "name": "update_brief",
+      "description": "Save an edited version and re-check it: resolved flags, new flags, rows that still need attention"
+    },
+    {
+      "name": "delete_brief",
+      "description": "Permanently delete a saved brief and its versions"
     },
     {
       "name": "sign_up",

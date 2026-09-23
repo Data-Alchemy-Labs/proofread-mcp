@@ -6,7 +6,7 @@ proofread.law checks each citation against an open register of about 10 million 
 
 ## What it does
 
-Eight tools:
+Thirteen tools:
 
 | Tool | Input | What comes back |
 |---|---|---|
@@ -16,10 +16,21 @@ Eight tools:
 | `resolve_citations` | a list of up to 500 citation strings | Counts by status, one line per citation in input order, the coverage statement |
 | `coverage` | `jurisdiction` (optional: `us` or `ch`) | The coverage statement and the storage notice; `ch` gives the Swiss register with the courts held and the share of the live index each covers |
 | `render_report` | a report id from a previous check, or the full report JSON | A markdown diligence report with every row |
+| `save_brief` | text, `title` (optional) | Saves the brief to the user's account (opt-in, stored encrypted) and checks it: the brief id, then the same compact result as `check_citations` |
+| `list_briefs` | none | The saved briefs: id, title, when saved and last checked, counts per tier, number of versions |
+| `get_brief` | id, `include_text` (default true), `version` (optional) | The saved text, the latest report and the versions kept; with `version`, that earlier text |
+| `update_brief` | id, `text` and/or `title` | Saves the edited text as a new version and re-checks it: the flags resolved since the previous version, the new flags, the unchanged count, then every row that still needs attention. A title alone renames without a check |
+| `delete_brief` | id | Permanently deletes the brief and its versions |
 | `sign_up` | the account owner's email, a name for the agent | A proofread.law account and an API key (shown once); the server uses it for the rest of the session |
 | `billing_link` | `payg`, `solo` or `firm` | A Stripe Checkout link for the account owner; needs an API key |
 
 The compact result of a check is capped at about 12,000 characters; when a long brief has more flagged rows than fit, the text says how many were left out and `render_report` has them all.
+
+### Saved briefs (opt-in)
+
+Nothing is saved unless `save_brief` or `update_brief` is called; `check_citations` and `check_document` never save anything. A saved brief is stored encrypted in the user's proofread.law account until `delete_brief` removes it, so the brief tools need an API key (any `PROOFREAD_API_KEY`, or one from `sign_up`); without one they answer with a message and send nothing. A server with storage switched off answers `storage_off`, and the tools say so.
+
+The loop for fixing flagged citations: `save_brief` once, fix a flagged row in the text (the citation, the case name, the quotation, or take the citation out), call `update_brief` with the id and the whole edited text, and read what changed: which flags were resolved (flagged before, not flagged now), which are new, and the rows that still need attention. Each version is kept; `get_brief` lists them and reads an earlier one.
 
 `check_citations` and `check_document` read prose: they compare the case name and any quotation with the register. `resolve_citation` and `resolve_citations` look the citation string up in the register (the `/v1/resolve` API) and tell you which case sits there; they do not compare it with the name you have.
 
@@ -147,6 +158,7 @@ Per month, per IP address without a key or per account with a free-tier key:
 | Tools | Quota |
 |---|---|
 | `check_citations`, `check_document` | 20 checks, of which 3 may be deep checks |
+| `save_brief`, `update_brief` with new text | each runs a default check and counts as one of those checks |
 | `resolve_citation`, `resolve_citations` | 1,000 resolves (each citation in a list counts as one) |
 | `coverage`, `render_report`, `sign_up`, `billing_link` | free, not counted |
 
@@ -158,11 +170,11 @@ There is also a limit of 20 requests an hour per IP (more on paid plans). When a
 
 The full policy is at [proofread.law/privacy](https://proofread.law/privacy). What applies to this server:
 
-- **What is collected.** The text or file you check leaves your machine and goes to proofread.law's own server (`PROOFREAD_API`, default `https://proofread.law`), over HTTPS, in the request that checks it. `sign_up` sends the account owner's email address and the agent name you give it. Nothing else is sent: no conversation history, no other files, no telemetry.
-- **Use and storage on proofread.law.** The input is processed in memory and discarded when the report is returned; no copy is written to disk. The log line per request carries the kind of input, its size, the number of citations, the tier counts and the time taken, never a citation, a party name or a word of text. With an account, proofread.law keeps the email address, the plan, a monthly count of checks and a hash of each API key.
+- **What is collected.** The text or file you check leaves your machine and goes to proofread.law's own server (`PROOFREAD_API`, default `https://proofread.law`), over HTTPS, in the request that checks it. `save_brief` and `update_brief` send the brief's text and title the same way. `sign_up` sends the account owner's email address and the agent name you give it. Nothing else is sent: no conversation history, no other files, no telemetry.
+- **Use and storage on proofread.law.** A checked input is processed in memory and discarded when the report is returned; no copy is written to disk. The exception is opt-in: a brief saved with `save_brief` or `update_brief` is stored encrypted in the user's account, with its reports and earlier versions, until `delete_brief` deletes it (permanently). No other tool saves anything. The log line per request carries the kind of input, its size, the number of citations, the tier counts and the time taken, never a citation, a party name or a word of text. With an account, proofread.law keeps the email address, the plan, a monthly count of checks and a hash of each API key.
 - **Third parties.** A citation string the register cannot resolve may be looked up in CourtListener's citation API (the citation string only, never prose). Deep check (`deep: true`) is opt-in: the clause before each citation (up to 700 characters) and the cited opinion go to the model judge; that is the only mode in which words from your document leave proofread.law. Sign-in links go through Resend; payments through Stripe, which sees the card and proofread.law does not. Requests pass through Cloudflare's edge in transit.
-- **Retention.** Inputs and reports: none. Account records: until the owner asks for deletion at privacy@proofread.law.
-- **This server.** It stores nothing on disk. It keeps the last 50 reports in memory so `render_report` can be called with a short id; they are gone when the process exits. The API key lives in your MCP client's configuration (Claude Desktop stores the extension's key as a sensitive setting); a key from `sign_up` is held in memory for the session and shown to you once so you can store it. It is sent only to `PROOFREAD_API`, as an `Authorization: Bearer` header. If a deep-check stream stops before every citation was judged, the tool answers with an error that says how many were checked; it never presents a partial deep check as a finished one.
+- **Retention.** Inputs and reports: none, except saved briefs, which are kept until the user deletes them. Account records: until the owner asks for deletion at privacy@proofread.law.
+- **This server.** It stores nothing on disk, saved briefs included (they live in the proofread.law account, not here). It keeps the last 50 reports in memory so `render_report` can be called with a short id; they are gone when the process exits. The API key lives in your MCP client's configuration (Claude Desktop stores the extension's key as a sensitive setting); a key from `sign_up` is held in memory for the session and shown to you once so you can store it. It is sent only to `PROOFREAD_API`, as an `Authorization: Bearer` header. If a deep-check stream stops before every citation was judged, the tool answers with an error that says how many were checked; it never presents a partial deep check as a finished one.
 - **Contact.** Data Alchemy Labs, privacy@proofread.law.
 
 ## The coverage caveat
@@ -202,7 +214,7 @@ node scripts/smoke-stdio.mjs           # spawn the stdio server, initialize, too
 node scripts/smoke-stdio.mjs --offline # the same without network
 ```
 
-Layout: `src/client.ts` is the typed HTTP client (`/verify`, `/render`, `/api/coverage`, `/v1/resolve` single and batch), `src/format.ts` the compact formatter for checks, `src/resolve_format.ts` the one for register answers, `src/tools/<name>.ts` one file per tool, `src/server.ts` registers them, `src/cli.ts` picks the transport. The remaining register routes (`/v1/extract`, `/v1/case/{id}`, `/v1/coverage` per reporter) slot in the same way: one method on the client, one file under `src/tools/`.
+Layout: `src/client.ts` is the typed HTTP client (`/verify`, `/render`, `/api/coverage`, `/v1/resolve` single and batch, `/v1/briefs`), `src/format.ts` the compact formatter for checks, `src/resolve_format.ts` the one for register answers, `src/briefs_format.ts` the one for saved briefs (`/v1/briefs`), `src/tools/<name>.ts` one file per tool, `src/server.ts` registers them, `src/cli.ts` picks the transport. The remaining register routes (`/v1/extract`, `/v1/case/{id}`, `/v1/coverage` per reporter) slot in the same way: one method on the client, one file under `src/tools/`.
 
 ## Publishing
 

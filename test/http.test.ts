@@ -63,7 +63,7 @@ describe("Streamable HTTP transport", () => {
     await mcp.connect(transport);
     expect(transport.sessionId).toMatch(/[0-9a-f-]{36}/);
     const { tools } = await mcp.listTools();
-    expect(tools).toHaveLength(8);
+    expect(tools).toHaveLength(13);
     expect(textOf(await mcp.callTool({ name: "coverage", arguments: {} }))).toBe("Coverage: C\nStorage: S");
     expect(textOf(await mcp.callTool({ name: "check_citations", arguments: { text: "x" } }))).toContain("- CHECK THIS: 509 U.S. 644");
     expect(calls).toHaveLength(2);

@@ -96,6 +96,10 @@ export function explain(err: unknown): string {
     case "billing_off":
     case "billing_failed":
       return `proofread.law: ${err.message}. Try again later, or the owner can subscribe at https://proofread.law/pricing.`;
+    case "storage_off":
+      return "proofread.law: saved briefs are switched off on this server, so nothing was saved or read. check_citations still checks a text without saving it.";
+    case "bad_brief_id":
+      return `proofread.law: ${err.message}. list_briefs shows the ids of the saved briefs.`;
     case "too_large":
       return `proofread.law: the input is too large (${err.message}); the cap is 10 MB.`;
     case "empty":

@@ -24,7 +24,7 @@ export const coverage = defineTool({
   title: "What proofread.law checks against",
   description:
     "The coverage statement (which opinions the register holds, its date, its known gaps, what is not checked: Westlaw/Lexis identifiers, statutes, regulations, secondary sources) " +
-    "and the storage notice (nothing submitted is stored). Pass jurisdiction 'ch' for the Swiss register instead (BGE/ATF/DTF, Federal Supreme Court dockets, the federal courts and the 26 cantons), " +
+    "and the storage notice (a checked text is not stored; only a brief the user saves with save_brief is kept, encrypted in their account). Pass jurisdiction 'ch' for the Swiss register instead (BGE/ATF/DTF, Federal Supreme Court dockets, the federal courts and the 26 cantons), " +
     "which also lists the courts held and the share of the live index each covers. Call it when a user asks what the check covers, how current it is, or what happens to their text. Free, not counted as a check.",
   inputSchema: { jurisdiction: z.enum(["us", "ch"]).optional().describe("Which register to describe. Default 'us'. 'ch' for Swiss case law.") },
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },

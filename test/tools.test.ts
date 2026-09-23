@@ -15,13 +15,14 @@ afterEach(async () => {
 const network = { throws: new TypeError("fetch failed") };
 
 describe("tools/list", () => {
-  it("lists the five tools with descriptions written for a model", async () => {
+  it("lists the thirteen tools with descriptions written for a model", async () => {
     session = await connectedClient();
     const { tools } = await session.mcp.listTools();
-    expect(tools.map((t) => t.name)).toEqual(["check_citations", "check_document", "resolve_citation", "resolve_citations", "coverage", "render_report", "sign_up", "billing_link"]);
+    expect(tools.map((t) => t.name)).toEqual(["check_citations", "check_document", "resolve_citation", "resolve_citations", "coverage", "render_report",
+      "save_brief", "list_briefs", "get_brief", "update_brief", "delete_brief", "sign_up", "billing_link"]);
     for (const t of tools) {
       expect(t.description?.length ?? 0).toBeGreaterThan(80);
-      expect(t.annotations?.readOnlyHint).toBe(!["sign_up", "billing_link"].includes(t.name));
+      expect(t.annotations?.readOnlyHint).toBe(!["sign_up", "billing_link", "save_brief", "update_brief", "delete_brief"].includes(t.name));
       expect(t.description).not.toMatch(/Firm (plan )?(API )?key/);
     }
     const check = tools.find((t) => t.name === "check_citations")!;

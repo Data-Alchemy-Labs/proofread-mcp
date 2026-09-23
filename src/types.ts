@@ -164,3 +164,78 @@ export interface CheckoutLink {
   plan?: string;
   note?: string;
 }
+
+// Saved briefs (/v1/briefs): opt-in, stored encrypted in the user's account. The API is newer than the rest, so every field the
+// formatter reads is optional and a missing one is left out of the text rather than guessed.
+
+/** The counts of a brief's latest check, as in a report's summary. */
+export type BriefSummary = Partial<Summary>;
+
+export interface BriefVersionInfo {
+  v: number;
+  created_at?: string;
+  summary?: BriefSummary | null;
+}
+
+/** GET /v1/briefs, one entry. `versions` is a count here and a list in GET /v1/briefs/{id}; both are read. */
+export interface BriefListItem {
+  id: string;
+  title?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  last_checked_at?: string | null;
+  n_citations?: number;
+  summary?: BriefSummary | null;
+  versions?: number | BriefVersionInfo[];
+  [key: string]: unknown;
+}
+
+export interface BriefList {
+  briefs: BriefListItem[];
+}
+
+/** POST /v1/briefs: the new brief and the report of its first check (same shape as POST /verify). */
+export interface SavedBrief {
+  id: string;
+  title?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  summary?: BriefSummary | null;
+  report: Report;
+  [key: string]: unknown;
+}
+
+/** GET /v1/briefs/{id}: the saved text, the latest report and the versions kept. */
+export interface Brief {
+  id: string;
+  title?: string | null;
+  text?: string;
+  report?: Report | null;
+  summary?: BriefSummary | null;
+  created_at?: string;
+  updated_at?: string;
+  versions?: BriefVersionInfo[];
+  [key: string]: unknown;
+}
+
+/** One flag in a PUT's changes: a row as in a report (citation, tier, parties, headline), or a plain citation string. */
+export type BriefChangeItem = string | (Partial<Row> & Record<string, unknown>);
+
+export interface BriefChanges {
+  resolved: BriefChangeItem[];
+  new: BriefChangeItem[];
+  unchanged: number;
+}
+
+/** PUT /v1/briefs/{id}: the brief after the edit, with what the re-check changed (absent when only the title changed). */
+export interface UpdatedBrief extends Brief {
+  changes?: BriefChanges | null;
+}
+
+/** GET /v1/briefs/{id}/versions/{v}. */
+export interface BriefVersion {
+  v: number;
+  created_at?: string;
+  text: string;
+  summary?: BriefSummary | null;
+}

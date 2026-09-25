@@ -52,8 +52,8 @@ notify("notifications/initialized", {});
 const list = await request("tools/list", {});
 const names = (list.result?.tools ?? []).map((t) => t.name);
 console.log("<- tools/list:", names.join(", "), "\n");
-if (names.length !== 13) {
-  console.error("expected 13 tools");
+if (names.length !== 14) {
+  console.error("expected 14 tools");
   process.exit(1);
 }
 

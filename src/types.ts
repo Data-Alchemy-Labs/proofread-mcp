@@ -242,3 +242,98 @@ export interface BriefVersion {
   text: string;
   summary?: BriefSummary | null;
 }
+
+// Case suggestions, Switzerland (GET and POST /v1/suggest): a statute article -> the leading Federal Supreme Court cases (BGE) cited with it.
+// Every string a reader sees (read_as, message, notes, about, section titles, fields, labels, practice flags) comes back worded in the
+// query's language (de/fr/it, or en), so the formatter prints them as they are. The API is new: every field past the status is optional
+// and a missing one is left out of the text rather than guessed.
+
+export type SuggestDomain = "all" | "civil" | "criminal" | "public" | "social";
+export type SuggestLang = "de" | "fr" | "it" | "en";
+/** ok, no_article (no statute article recognised in the query), not_indexed (the articles named have no leading case in the index). */
+export type SuggestStatus = "ok" | "no_article" | "not_indexed";
+
+export interface SuggestArticle {
+  law: string;
+  art: string;
+  para?: string | null;
+  label: string;
+  indexed?: boolean;
+  [key: string]: unknown;
+}
+
+/** A later change of practice on a suggested decision. A changed precedent is always listed with its flag, never dropped. */
+export interface PracticeFlag {
+  kind: "practice_changed" | "practice_clarified" | string;
+  text: string;
+  lines?: string[];
+  by?: string | null;
+  url?: string | null;
+  [key: string]: unknown;
+}
+
+export interface SuggestResult {
+  /** The position in the overall measured ranking (a section keeps that order). */
+  rank: number;
+  ref: string;
+  /** Localised, with the consideration when there is one: "ATF 132 III 122 consid. 4.3". */
+  cite: string;
+  date?: string | null;
+  date_display?: string | null;
+  /** The decision's own language. */
+  language?: string | null;
+  domain?: string | null;
+  field?: string | null;
+  home_domain?: boolean;
+  passage?: string | null;
+  passage_kind?: "regeste" | "reasons" | "regeste_start" | string;
+  passage_label?: string | null;
+  passage_language?: string | null;
+  erw?: string | null;
+  /** The regeste as context line, on rows whose passage comes from the reasons. */
+  regeste?: string | null;
+  regeste_label?: string | null;
+  score?: number;
+  /** The decision at the court's site. */
+  url?: string | null;
+  /** A path on proofread.law that opens the checker with this citation filled in. */
+  check_url?: string | null;
+  rank_label?: string | null;
+  open_label?: string | null;
+  check_label?: string | null;
+  practice?: PracticeFlag[];
+  [key: string]: unknown;
+}
+
+export interface SuggestSection {
+  /** home: the article's own field of law; other: also cited with the article in other fields (collapsed on the web page). */
+  kind: "home" | "other" | string;
+  title?: string | null;
+  collapsed?: boolean;
+  empty_note?: string | null;
+  domains?: string[];
+  results: SuggestResult[];
+}
+
+export interface SuggestAnswer {
+  status: SuggestStatus | string;
+  language?: string;
+  query_language?: string;
+  understood?: SuggestArticle[];
+  read_as?: string | null;
+  /** Set for no_article and not_indexed. */
+  message?: string | null;
+  notes?: string[];
+  domain?: string;
+  k?: number;
+  home_domains?: string[];
+  sections?: SuggestSection[];
+  counts?: Record<string, number> | null;
+  practice_layer?: boolean | null;
+  /** The method and its measured numbers, one paragraph. */
+  about?: string | null;
+  method?: Record<string, unknown> | null;
+  plan?: string;
+  elapsed_s?: number;
+  [key: string]: unknown;
+}

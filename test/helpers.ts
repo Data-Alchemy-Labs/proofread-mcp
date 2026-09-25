@@ -4,7 +4,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { FetchLike } from "../src/client.js";
 import { createClient } from "../src/client.js";
 import { createServer } from "../src/server.js";
-import type { Report, ResolveBatch, ResolveResult } from "../src/types.js";
+import type { Report, ResolveBatch, ResolveResult, SuggestAnswer } from "../src/types.js";
 
 const here = new URL(".", import.meta.url);
 
@@ -22,6 +22,11 @@ export function resolveResult(status: ResolveResult["status"]): ResolveResult {
   const r = batch.results.find((x) => x.status === status);
   if (!r) throw new Error(`no fixture result with status ${status}`);
   return { ...r, freshness: batch.freshness, coverage_statement: batch.coverage_statement };
+}
+
+/** Real GET /v1/suggest answers (dev branch, 2026-09-26): "Art. 41 OR, Art. 97 OR" k=3 (de), "art. 41 CO" k=3 (fr), "nothing here" (no_article). */
+export function suggestFixture(name: "de" | "fr" | "noarticle"): SuggestAnswer {
+  return JSON.parse(readFileSync(new URL(`fixtures/suggest-${name}.json`, here), "utf8")) as SuggestAnswer;
 }
 
 export const error429 = JSON.parse(readFileSync(new URL("fixtures/error-429.json", here), "utf8")) as unknown;

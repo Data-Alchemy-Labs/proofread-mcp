@@ -4,7 +4,7 @@ import { configFromEnv, type Config } from "./config.js";
 import { tools } from "./tools/index.js";
 
 export const SERVER_NAME = "proofread-mcp";
-export const SERVER_VERSION = "0.2.0";
+export const SERVER_VERSION = "0.3.0";
 
 export const INSTRUCTIONS =
   "proofread.law checks case citations against open registers: about 10 million US court opinions, and 1.1 million Swiss decisions (BGE/ATF/DTF, Federal Supreme Court dockets, the federal courts and all 26 cantons). "
@@ -14,6 +14,8 @@ export const INSTRUCTIONS =
   "Never call a red or orange row invented or untrue: say what was checked and what was found. " +
   "Every result carries a coverage statement; repeat it when reporting to the user. " +
   "Not covered: Westlaw/Lexis identifiers, statutes, regulations, secondary sources, whether a case is still good law. " +
+  "For Swiss law, suggest_cases takes a statute article (e.g. Art. 41 OR) and lists the leading Federal Supreme Court cases cited with it, to read; " +
+  "a suggestion is not checked against the user's sentence (check_citations checks citations). " +
   "Saved briefs are opt-in and stored encrypted in the user's account; nothing is saved unless save_brief or update_brief is called. " +
   "To fix flagged citations in a saved brief, edit the text, call update_brief with the brief id and the whole edited text, and read what changed (resolved flags, new flags) before the next edit. " +
   "Without an API key the free tier applies per IP; sign_up creates an account and key for the owner's inbox, billing_link gives the owner a checkout page when a quota is used up.";

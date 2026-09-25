@@ -15,6 +15,7 @@ describe("annotations (directory requirement: title plus readOnlyHint or destruc
     resolve_citations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     coverage: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     render_report: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+    suggest_cases: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     save_brief: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     list_briefs: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     get_brief: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },

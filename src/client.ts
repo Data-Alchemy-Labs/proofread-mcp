@@ -1,13 +1,19 @@
 import type { Config } from "./config.js";
 import { ProofreadError } from "./errors.js";
 import { readSseReport } from "./sse.js";
-import type { Brief, BriefList, BriefVersion, CheckoutLink, Coverage, CoverageCh, Report, ResolveBatch, ResolveResult, Row, SavedBrief, SignupResult, UpdatedBrief } from "./types.js";
+import type { Brief, BriefList, BriefVersion, CheckoutLink, Coverage, CoverageCh, Report, ResolveBatch, ResolveResult, Row, SavedBrief, SignupResult, SuggestAnswer, SuggestDomain, SuggestLang, UpdatedBrief } from "./types.js";
 
-export const USER_AGENT = "proofread-mcp/0.2.0 (+https://github.com/Data-Alchemy-Labs/proofread-mcp)";
+export const USER_AGENT = "proofread-mcp/0.3.0 (+https://github.com/Data-Alchemy-Labs/proofread-mcp)";
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 export const MAX_BATCH_CITES = 500;
 /** A saved brief's id as it goes into a URL path: letters, digits, hyphens, underscores (no dots, so never `..`). */
 export const BRIEF_ID_RE = /^[A-Za-z0-9_-]{1,128}$/;
+/** The API's cap on a suggestion query (413 too_large past it). */
+export const MAX_SUGGEST_QUERY_CHARS = 20_000;
+/** A query longer than this (a pasted paragraph) goes as POST, as the web page sends it; a short one as GET. */
+export const SUGGEST_GET_MAX_CHARS = 1_500;
+/** ...and so does a short one whose encoded form would make a long URL (many accented characters). */
+const SUGGEST_GET_MAX_ENCODED = 4_000;
 
 /** A default check answers in seconds; a deep check runs 1 to 2 s per citation, four in parallel, up to 15 minutes server-side. */
 const DEFAULT_TIMEOUT_MS = 120_000;
@@ -24,6 +30,14 @@ export interface VerifyOptions {
 }
 
 export type Plan = "payg" | "solo" | "firm";
+
+export interface SuggestOptions {
+  domain?: SuggestDomain;
+  /** The answer's language; the API defaults to the query's language. */
+  lang?: SuggestLang;
+  /** Rows per section, 1 to 50. */
+  k?: number;
+}
 
 export interface Client {
   verifyText(text: string, options?: VerifyOptions): Promise<Report>;
@@ -51,6 +65,10 @@ export interface Client {
   getBriefVersion(id: string, v: number, signal?: AbortSignal): Promise<BriefVersion>;
   /** DELETE /v1/briefs/{id}: permanent. */
   deleteBrief(id: string, signal?: AbortSignal): Promise<void>;
+  /** GET /v1/suggest (POST for a long query): a Swiss statute article -> the leading BGE cited with it. One resolve per answered query. */
+  suggest(query: string, options?: SuggestOptions, signal?: AbortSignal): Promise<SuggestAnswer>;
+  /** The origin of PROOFREAD_API (https://proofread.law by default): the site that the API's relative links (a suggestion's check_url) point into. */
+  siteOrigin(): string;
   hasApiKey(): boolean;
   /** Adopt a key for the rest of this process (after sign_up); nothing is written to disk. */
   setApiKey(key: string): void;
@@ -217,6 +235,31 @@ export function createClient(config: Config, fetchImpl: FetchLike = globalThis.f
       await res.body?.cancel().catch(() => {}); // 204 has no body; anything else is not needed
     },
 
+    async suggest(query, options = {}, signal) {
+      if (query.length > MAX_SUGGEST_QUERY_CHARS) {
+        throw new ProofreadError(413, "too_large", `the query is ${query.length.toLocaleString("en-US")} characters long`);
+      }
+      const params: Record<string, string | number> = {};
+      if (options.domain !== undefined) params.domain = options.domain;
+      if (options.lang !== undefined) params.lang = options.lang;
+      if (options.k !== undefined) params.k = options.k;
+      const q = encodeURIComponent(query);
+      const res = query.length <= SUGGEST_GET_MAX_CHARS && q.length <= SUGGEST_GET_MAX_ENCODED
+        ? await call(`/v1/suggest?q=${q}${Object.entries(params).map(([name, value]) => `&${name}=${encodeURIComponent(String(value))}`).join("")}`,
+          { method: "GET", headers: headers() }, DEFAULT_TIMEOUT_MS, signal)
+        : await call("/v1/suggest", { method: "POST", headers: headers({ "Content-Type": "application/json" }), body: JSON.stringify({ q: query, ...params }) },
+          DEFAULT_TIMEOUT_MS, signal);
+      return json<SuggestAnswer>(res, checkSuggestShape);
+    },
+
+    siteOrigin() {
+      try {
+        return new URL(config.baseUrl).origin;
+      } catch {
+        return config.baseUrl;
+      }
+    },
+
     hasApiKey: () => Boolean(apiKey),
     setApiKey(key) {
       apiKey = key;
@@ -251,6 +294,14 @@ function checkBriefShape(v: unknown): string | undefined {
   if (!hasId(v)) return "no brief id";
   if (v.report !== undefined && v.report !== null) return checkReportShape(v.report);
   return undefined;
+}
+
+/** A suggestion answer: a status, and sections that each carry a list of results when there are any. */
+function checkSuggestShape(v: unknown): string | undefined {
+  if (!isObject(v) || typeof v.status !== "string") return "no status field";
+  if (v.sections === undefined || v.sections === null) return undefined;
+  if (!Array.isArray(v.sections)) return "sections is not a list";
+  return v.sections.every((s) => isObject(s) && Array.isArray(s.results)) ? undefined : "a section without results";
 }
 
 function checkReportShape(v: unknown): string | undefined {

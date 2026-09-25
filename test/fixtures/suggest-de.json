@@ -1,0 +1,346 @@
+{
+ "status": "ok",
+ "query_language": "de",
+ "language": "de",
+ "understood": [
+  {
+   "law": "OR",
+   "art": "41",
+   "para": null,
+   "raw": "Art. 41 OR",
+   "label": "Art. 41 OR",
+   "indexed": true
+  },
+  {
+   "law": "OR",
+   "art": "97",
+   "para": null,
+   "raw": "Art. 97 OR",
+   "label": "Art. 97 OR",
+   "indexed": true
+  }
+ ],
+ "domain": "all",
+ "k": 3,
+ "home_domains": [
+  "civil"
+ ],
+ "sections": [
+  {
+   "kind": "home",
+   "domains": [
+    "civil"
+   ],
+   "collapsed": false,
+   "results": [
+    {
+     "rank": 5,
+     "ref": "BGE 144 III 155",
+     "ref_local": "BGE 144 III 155",
+     "cite": "BGE 144 III 155",
+     "decision_id": "bge_BGE_144_III_155",
+     "date": "2018-04-16",
+     "language": "de",
+     "domain": "civil",
+     "home_domain": true,
+     "passage": "Art. 398 Abs. 2 i.V.m. Art. 97 Abs. 1 und Art. 42 Abs. 1 und 2 OR; Bestimmung des Schadens. Bestimmung des im Rahmen einer pflichtwidrigen Anlageberatung aus einzelnen Anlagen erwachsenen Schadens in Abgrenzung zur Schadensbestimmung bei einem gesamthaft pflichtwidrig verwalteten Portfolio (E. 2).",
+     "passage_kind": "regeste",
+     "passage_language": "de",
+     "erw": null,
+     "passage_article": "Art. 97 OR",
+     "regeste": null,
+     "regeste_language": null,
+     "articles": [
+      {
+       "law": "OR",
+       "art": "41",
+       "label": "Art. 41 OR",
+       "rank": 9,
+       "passage_kind": "regeste_start",
+       "regeste_names": false,
+       "reasons_names": false
+      },
+      {
+       "law": "OR",
+       "art": "97",
+       "label": "Art. 97 OR",
+       "rank": 1,
+       "passage_kind": "regeste",
+       "regeste_names": true,
+       "reasons_names": true
+      }
+     ],
+     "score": 11.3456,
+     "n_cociting": 35,
+     "url": "https://search.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F144-III-155%3Ade&lang=de&type=show_document",
+     "practice": [],
+     "date_display": "16.04.2018",
+     "field": "Zivilrecht",
+     "passage_label": "Regeste",
+     "regeste_label": null,
+     "rank_label": "Rang 5",
+     "open_label": "Entscheid öffnen",
+     "check_label": "Zitat prüfen",
+     "check_url": "/?cite=Art.%2097%20OR%3B%20BGE%20144%20III%20155#check"
+    },
+    {
+     "rank": 8,
+     "ref": "BGE 132 III 122",
+     "ref_local": "BGE 132 III 122",
+     "cite": "BGE 132 III 122",
+     "decision_id": "bge_132 III 122",
+     "date": "2005-09-13",
+     "language": "fr",
+     "domain": "civil",
+     "home_domain": true,
+     "passage": "Rechtmässigkeit von im Arbeitskampf eingesetzten Mitteln (Art. 28 BV; Art. 41 und 357a OR). Kriterien für die Bestimmung, ob ein Mittel des Arbeitskampfes vorliegt (E. 4.3). Da Art. 28 BV betreffend die Koalitionsfreiheit indirekte Drittwirkung im Bereich der Arbeitsbeziehungen des privaten Sektors entfaltet, muss ein Gericht dieses Verfassungsrecht berücksichtigen, wenn es …",
+     "passage_kind": "regeste",
+     "passage_language": "de",
+     "erw": null,
+     "passage_article": "Art. 41 OR",
+     "regeste": null,
+     "regeste_language": null,
+     "articles": [
+      {
+       "law": "OR",
+       "art": "41",
+       "label": "Art. 41 OR",
+       "rank": 7,
+       "passage_kind": "regeste",
+       "regeste_names": true,
+       "reasons_names": true
+      }
+     ],
+     "score": 7.5631,
+     "n_cociting": 43,
+     "url": "https://search.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F132-III-122%3Ade&lang=de&type=show_document",
+     "practice": [],
+     "date_display": "13.09.2005",
+     "field": "Zivilrecht",
+     "passage_label": "Regeste",
+     "regeste_label": null,
+     "rank_label": "Rang 8",
+     "open_label": "Entscheid öffnen",
+     "check_label": "Zitat prüfen",
+     "check_url": "/?cite=Art.%2041%20OR%3B%20BGE%20132%20III%20122#check"
+    },
+    {
+     "rank": 9,
+     "ref": "BGE 145 III 225",
+     "ref_local": "BGE 145 III 225",
+     "cite": "BGE 145 III 225",
+     "decision_id": "bge_BGE_145_III_225",
+     "date": "2019-05-20",
+     "language": "de",
+     "domain": "civil",
+     "home_domain": true,
+     "passage": "Art. 42 Abs. 2 und 97 Abs. 1 OR; merkantiler Minderwert. Definition des Schadens aus merkantilem Minderwert (E. 3). Bedeutung des Zeitablaufs im Rahmen der Schadensermittlung und rechtliche Behandlung von sich mit der Zeit ändernden Schäden (E. 4.1). …",
+     "passage_kind": "regeste",
+     "passage_language": "de",
+     "erw": null,
+     "passage_article": "Art. 97 OR",
+     "regeste": null,
+     "regeste_language": null,
+     "articles": [
+      {
+       "law": "OR",
+       "art": "41",
+       "label": "Art. 41 OR",
+       "rank": 11,
+       "passage_kind": "regeste_start",
+       "regeste_names": false,
+       "reasons_names": false
+      },
+      {
+       "law": "OR",
+       "art": "97",
+       "label": "Art. 97 OR",
+       "rank": 45,
+       "passage_kind": "regeste",
+       "regeste_names": true,
+       "reasons_names": true
+      }
+     ],
+     "score": 7.3689,
+     "n_cociting": 13,
+     "url": "https://search.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F145-III-225%3Ade&lang=de&type=show_document",
+     "practice": [],
+     "date_display": "20.05.2019",
+     "field": "Zivilrecht",
+     "passage_label": "Regeste",
+     "regeste_label": null,
+     "rank_label": "Rang 9",
+     "open_label": "Entscheid öffnen",
+     "check_label": "Zitat prüfen",
+     "check_url": "/?cite=Art.%2097%20OR%3B%20BGE%20145%20III%20225#check"
+    }
+   ],
+   "title": "Entscheide aus dem Zivilrecht",
+   "empty_note": null
+  },
+  {
+   "kind": "other",
+   "collapsed": true,
+   "results": [
+    {
+     "rank": 1,
+     "ref": "BGE 146 IV 76",
+     "ref_local": "BGE 146 IV 76",
+     "cite": "BGE 146 IV 76",
+     "decision_id": "bge_146 IV 76",
+     "date": "2019-11-13",
+     "language": "fr",
+     "domain": "criminal",
+     "home_domain": false,
+     "passage": "a) Art. 110 Abs. 1 StGB; Art. 118, 121 Abs. 1 und 382 Abs. 1 StPO; Legitimation der Angehörigen einer verstorbenen geschädigten Person zur Anfechtung einer Verfahrenseinstellung. Die Angehörigen der verstorbenen geschädigten Person, die sich im Vorverfahren rechtsgültig als Privatklägerschaft konstituiert haben, können über ein rechtlich geschütztes Interesse im Sinne von Art. …",
+     "passage_kind": "regeste_start",
+     "passage_language": "de",
+     "erw": null,
+     "passage_article": "Art. 41 OR",
+     "regeste": null,
+     "regeste_language": null,
+     "articles": [
+      {
+       "law": "OR",
+       "art": "41",
+       "label": "Art. 41 OR",
+       "rank": 1,
+       "passage_kind": "regeste_start",
+       "regeste_names": false,
+       "reasons_names": false
+      }
+     ],
+     "score": 71.999,
+     "n_cociting": 350,
+     "url": "https://search.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F146-IV-76%3Ade&lang=de&type=show_document",
+     "practice": [],
+     "date_display": "13.11.2019",
+     "field": "Strafrecht",
+     "passage_label": "Das Bundesgericht zitiert diesen Entscheid zusammen mit Art. 41 OR; der Entscheid selbst nennt den Artikel nicht. Aus der Regeste:",
+     "regeste_label": null,
+     "rank_label": "Rang 1",
+     "open_label": "Entscheid öffnen",
+     "check_label": "Zitat prüfen",
+     "check_url": "/?cite=Art.%2041%20OR%3B%20BGE%20146%20IV%2076#check"
+    },
+    {
+     "rank": 2,
+     "ref": "BGE 141 IV 1",
+     "ref_local": "BGE 141 IV 1",
+     "cite": "BGE 141 IV 1",
+     "decision_id": "bge_BGE_141_IV_1",
+     "date": "2014-12-04",
+     "language": "fr",
+     "domain": "criminal",
+     "home_domain": false,
+     "passage": "a) Art. 81 Abs. 1 lit. a und b Ziff. 5 BGG; Legitimation der Privatklägerschaft zur Beschwerde in Strafsachen. Zusammenfassung der Rechtsprechung zur Legitimation der Privatklägerschaft zur Beschwerde in Strafsachen, insbesondere hinsichtlich der Begründungspflicht im Zusammenhang mit Zivilforderungen (E. 1). b) Art. 115 und 118 StPO; Art. 180, 181 und 325 bis StGB; …",
+     "passage_kind": "regeste_start",
+     "passage_language": "de",
+     "erw": null,
+     "passage_article": "Art. 41 OR",
+     "regeste": null,
+     "regeste_language": null,
+     "articles": [
+      {
+       "law": "OR",
+       "art": "41",
+       "label": "Art. 41 OR",
+       "rank": 2,
+       "passage_kind": "regeste_start",
+       "regeste_names": false,
+       "reasons_names": false
+      }
+     ],
+     "score": 66.9747,
+     "n_cociting": 614,
+     "url": "https://search.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F141-IV-1%3Ade&lang=de&type=show_document",
+     "practice": [],
+     "date_display": "04.12.2014",
+     "field": "Strafrecht",
+     "passage_label": "Das Bundesgericht zitiert diesen Entscheid zusammen mit Art. 41 OR; der Entscheid selbst nennt den Artikel nicht. Aus der Regeste:",
+     "regeste_label": null,
+     "rank_label": "Rang 2",
+     "open_label": "Entscheid öffnen",
+     "check_label": "Zitat prüfen",
+     "check_url": "/?cite=Art.%2041%20OR%3B%20BGE%20141%20IV%201#check"
+    },
+    {
+     "rank": 3,
+     "ref": "BGE 137 IV 246",
+     "ref_local": "BGE 137 IV 246",
+     "cite": "BGE 137 IV 246",
+     "decision_id": "bge_137 IV 246",
+     "date": "2011-07-15",
+     "language": "de",
+     "domain": "criminal",
+     "home_domain": false,
+     "passage": "Art. 81 Abs. 1 lit. b Ziff. 5 BGG; Legitimation der Privatklägerschaft. Am 1. Januar 2011 ist die revidierte Bestimmung von Art. 81 Abs. 1 lit. b Ziff. 5 BGG in Kraft getreten. Die Voraussetzung, dass sich der angefochtene Entscheid auf die Beurteilung der Zivilansprüche auswirken kann, blieb dabei unverändert. …",
+     "passage_kind": "regeste_start",
+     "passage_language": "de",
+     "erw": null,
+     "passage_article": "Art. 41 OR",
+     "regeste": null,
+     "regeste_language": null,
+     "articles": [
+      {
+       "law": "OR",
+       "art": "41",
+       "label": "Art. 41 OR",
+       "rank": 3,
+       "passage_kind": "regeste_start",
+       "regeste_names": false,
+       "reasons_names": false
+      }
+     ],
+     "score": 14.7169,
+     "n_cociting": 103,
+     "url": "https://search.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F137-IV-246%3Ade&lang=de&type=show_document",
+     "practice": [],
+     "date_display": "15.07.2011",
+     "field": "Strafrecht",
+     "passage_label": "Das Bundesgericht zitiert diesen Entscheid zusammen mit Art. 41 OR; der Entscheid selbst nennt den Artikel nicht. Aus der Regeste:",
+     "regeste_label": null,
+     "rank_label": "Rang 3",
+     "open_label": "Entscheid öffnen",
+     "check_label": "Zitat prüfen",
+     "check_url": "/?cite=Art.%2041%20OR%3B%20BGE%20137%20IV%20246#check"
+    }
+   ],
+   "title": "Mit diesen Artikeln auch in anderen Rechtsgebieten zitiert",
+   "empty_note": null
+  }
+ ],
+ "not_indexed": [],
+ "practice_layer": true,
+ "counts": {
+  "candidates": 93,
+  "home": 60,
+  "other": 33,
+  "shown": 6,
+  "flagged": 0
+ },
+ "method": {
+  "built_at": "2026-09-25T20:08:33Z",
+  "articles": 13198,
+  "rows": 282121,
+  "method": "v8: recency-weighted co-citation (half-life 2 y) shared among the consideration's articles + regeste / own-reasons naming the article",
+  "half_life": 2.0,
+  "top": 50,
+  "benchmark": {
+   "hit@10": 0.611,
+   "recall@10": 0.438,
+   "dev": {
+    "hit@10": 0.61,
+    "recall@10": 0.438
+   },
+   "split": "index <= 2024, test BGer 2025+ considerations; substantive articles; held-out second look (v5 passed the first look at 0.609/0.434)",
+   "progress": "citation-bench PROGRESS 2026-09-25/26"
+  }
+ },
+ "read_as": "Gelesen als: Art. 41 OR, Art. 97 OR",
+ "notes": [],
+ "message": null,
+ "about": "Die Vorschläge sind publizierte Leitentscheide (BGE). Sie sind danach gereiht, wie oft das Bundesgericht sie zusammen mit dem Artikel zitiert, wobei neuere Zitate stärker zählen; nennt die Regeste oder eine Erwägung den Artikel, steigt der Entscheid in der Reihenfolge. In einem Test mit Urteilen aus dem Jahr 2025 war der Leitentscheid, den das Gericht tatsächlich zitierte, bei 61 % der Abfragen unter den ersten zehn Vorschlägen; die ersten zehn enthielten 44 % aller zitierten Leitentscheide. Unpublizierte Urteile fehlen in der Liste. Ein Vorschlag ist ein Entscheid zum Lesen: Ob er Ihre Aussage stützt, prüft diese Liste nicht, und ein Entscheid ohne Hinweis ist kein Beleg dafür, dass seine Praxis weiter gilt.",
+ "plan": "firm",
+ "elapsed_s": 0.006
+}

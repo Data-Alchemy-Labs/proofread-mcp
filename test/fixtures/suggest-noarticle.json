@@ -1,0 +1,38 @@
+{
+ "status": "no_article",
+ "query_language": "de",
+ "language": "de",
+ "understood": [],
+ "domain": "all",
+ "k": 10,
+ "home_domains": [],
+ "sections": [],
+ "not_indexed": [],
+ "practice_layer": null,
+ "counts": null,
+ "method": {
+  "built_at": "2026-09-25T20:08:33Z",
+  "articles": 13198,
+  "rows": 282121,
+  "method": "v8: recency-weighted co-citation (half-life 2 y) shared among the consideration's articles + regeste / own-reasons naming the article",
+  "half_life": 2.0,
+  "top": 50,
+  "benchmark": {
+   "hit@10": 0.611,
+   "recall@10": 0.438,
+   "dev": {
+    "hit@10": 0.61,
+    "recall@10": 0.438
+   },
+   "split": "index <= 2024, test BGer 2025+ considerations; substantive articles; held-out second look (v5 passed the first look at 0.609/0.434)",
+   "progress": "citation-bench PROGRESS 2026-09-25/26"
+  }
+ },
+ "citations_in_query": 0,
+ "message": "In der Eingabe wurde kein Artikel eines Bundesgesetzes erkannt. Nennen Sie einen, zum Beispiel Art. 41 OR.",
+ "read_as": null,
+ "notes": [],
+ "about": null,
+ "plan": "firm",
+ "elapsed_s": 0.0
+}

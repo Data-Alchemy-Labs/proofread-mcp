@@ -10,6 +10,7 @@ import { resolveCitation } from "./resolve_citation.js";
 import { resolveCitations } from "./resolve_citations.js";
 import { saveBrief } from "./save_brief.js";
 import { signUp } from "./sign_up.js";
+import { suggestCases } from "./suggest_cases.js";
 import type { ToolDef } from "./tool.js";
 import { updateBrief } from "./update_brief.js";
 
@@ -17,6 +18,7 @@ import { updateBrief } from "./update_brief.js";
 // a method on the client, a file here.
 export const tools: ToolDef[] = [
   checkCitations, checkDocument, resolveCitation, resolveCitations, coverage, renderReport,
+  suggestCases, // Swiss statute article -> leading cases to read (paid plans and trials for now)
   saveBrief, listBriefs, getBrief, updateBrief, deleteBrief, // saved briefs: opt-in, encrypted in the user's account
   signUp, billingLink,
 ];

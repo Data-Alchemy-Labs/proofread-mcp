@@ -82,6 +82,12 @@ export function explain(err: unknown): string {
     case "signed_out":
       return "proofread.law needs an API key for this: set PROOFREAD_API_KEY, or call sign_up to create an account and key.";
     case "missing_cite":
+    case "missing_query":
+    case "bad_domain":
+    case "bad_lang":
+    case "bad_k":
+    case "bad_request":
+    case "bad_json":
     case "too_many":
     case "bad_email":
     case "bad_agent_name":

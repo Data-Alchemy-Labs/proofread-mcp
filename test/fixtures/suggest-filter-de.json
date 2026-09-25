@@ -1,0 +1,184 @@
+{
+ "status": "ok",
+ "query_language": "de",
+ "language": "de",
+ "understood": [
+  {
+   "law": "OR",
+   "art": "41",
+   "para": null,
+   "raw": "Art. 41 OR",
+   "label": "Art. 41 OR",
+   "indexed": true
+  }
+ ],
+ "domain": "civil",
+ "k": 3,
+ "home_domains": [
+  "civil"
+ ],
+ "results": [
+  {
+   "rank": 7,
+   "ref": "BGE 132 III 122",
+   "ref_local": "BGE 132 III 122",
+   "cite": "BGE 132 III 122",
+   "decision_id": "bge_132 III 122",
+   "date": "2005-09-13",
+   "language": "fr",
+   "domain": "civil",
+   "home_domain": true,
+   "passage": "Rechtmässigkeit von im Arbeitskampf eingesetzten Mitteln (Art. 28 BV; Art. 41 und 357a OR). Kriterien für die Bestimmung, ob ein Mittel des Arbeitskampfes vorliegt (E. 4.3). Da Art. 28 BV betreffend die Koalitionsfreiheit indirekte Drittwirkung im Bereich der Arbeitsbeziehungen des privaten Sektors entfaltet, muss ein Gericht dieses Verfassungsrecht berücksichtigen, wenn es …",
+   "passage_kind": "regeste",
+   "passage_language": "de",
+   "erw": null,
+   "passage_article": "Art. 41 OR",
+   "regeste": null,
+   "regeste_language": null,
+   "articles": [
+    {
+     "law": "OR",
+     "art": "41",
+     "label": "Art. 41 OR",
+     "rank": 7,
+     "passage_kind": "regeste",
+     "regeste_names": true,
+     "reasons_names": true
+    }
+   ],
+   "score": 7.5631,
+   "n_cociting": 43,
+   "url": "https://search.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F132-III-122%3Ade&lang=de&type=show_document",
+   "practice": [],
+   "date_display": "13.09.2005",
+   "field": "Zivilrecht",
+   "passage_label": "Regeste",
+   "regeste_label": null,
+   "rank_label": "Rang 7",
+   "open_label": "Entscheid öffnen",
+   "check_label": "Zitat prüfen",
+   "check_url": "/?cite=Art.%2041%20OR%3B%20BGE%20132%20III%20122#check"
+  },
+  {
+   "rank": 9,
+   "ref": "BGE 144 III 155",
+   "ref_local": "BGE 144 III 155",
+   "cite": "BGE 144 III 155",
+   "decision_id": "bge_BGE_144_III_155",
+   "date": "2018-04-16",
+   "language": "de",
+   "domain": "civil",
+   "home_domain": true,
+   "passage": "Art. 398 Abs. 2 i.V.m. Art. 97 Abs. 1 und Art. 42 Abs. 1 und 2 OR; Bestimmung des Schadens. Bestimmung des im Rahmen einer pflichtwidrigen Anlageberatung aus einzelnen Anlagen erwachsenen Schadens in Abgrenzung zur Schadensbestimmung bei einem gesamthaft pflichtwidrig verwalteten Portfolio (E. 2).",
+   "passage_kind": "regeste_start",
+   "passage_language": "de",
+   "erw": null,
+   "passage_article": "Art. 41 OR",
+   "regeste": null,
+   "regeste_language": null,
+   "articles": [
+    {
+     "law": "OR",
+     "art": "41",
+     "label": "Art. 41 OR",
+     "rank": 9,
+     "passage_kind": "regeste_start",
+     "regeste_names": false,
+     "reasons_names": false
+    }
+   ],
+   "score": 6.7635,
+   "n_cociting": 16,
+   "url": "https://search.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F144-III-155%3Ade&lang=de&type=show_document",
+   "practice": [],
+   "date_display": "16.04.2018",
+   "field": "Zivilrecht",
+   "passage_label": "Das Bundesgericht zitiert diesen Entscheid zusammen mit Art. 41 OR; der Entscheid selbst nennt den Artikel nicht. Aus der Regeste:",
+   "regeste_label": null,
+   "rank_label": "Rang 9",
+   "open_label": "Entscheid öffnen",
+   "check_label": "Zitat prüfen",
+   "check_url": "/?cite=Art.%2041%20OR%3B%20BGE%20144%20III%20155#check"
+  },
+  {
+   "rank": 10,
+   "ref": "BGE 148 III 11",
+   "ref_local": "BGE 148 III 11",
+   "cite": "BGE 148 III 11 E. 3.2",
+   "decision_id": "bge_BGE_148_III_11",
+   "date": "2021-11-01",
+   "language": "de",
+   "domain": "civil",
+   "home_domain": true,
+   "passage": "… ausschliesslich dem Gläubiger- oder Aktionärsschutz dienen oder die Schadenersatzpflicht auf einem andern widerrechtlichen Verhalten des Organs im Sinne von Art. 41 OR oder einem Tatbestand der culpa in contrahendo gründet (BGE 141 III 112 E. 5.2.3; BGE 132 III 564 E. 3.2.3 mit Hinweisen). …",
+   "passage_kind": "reasons",
+   "passage_language": "de",
+   "erw": "3.2",
+   "passage_article": "Art. 41 OR",
+   "regeste": "Art. 754 ff. OR; aktienrechtliche Verantwortlichkeit; Klagebefugnis. In der Konstellation, in der sowohl die Gesellschaft als auch der Gläubiger und/oder Aktionär unmittelbar bzw. direkt geschädigt sind, besteht, solange die Gesellschaft aufrecht steht, mangels Konkurrenzsituation keine Einschränkung der Klagebefugnis des Gläubigers und/oder Aktionärs (Bestätigung der …",
+   "regeste_language": "de",
+   "articles": [
+    {
+     "law": "OR",
+     "art": "41",
+     "label": "Art. 41 OR",
+     "rank": 10,
+     "passage_kind": "reasons",
+     "regeste_names": false,
+     "reasons_names": true
+    }
+   ],
+   "score": 6.5456,
+   "n_cociting": 13,
+   "url": "https://search.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F148-III-11%3Ade&lang=de&type=show_document",
+   "practice": [],
+   "date_display": "01.11.2021",
+   "field": "Zivilrecht",
+   "passage_label": "E. 3.2",
+   "regeste_label": "Worum es im Entscheid geht (Regeste):",
+   "rank_label": "Rang 10",
+   "open_label": "Entscheid öffnen",
+   "check_label": "Zitat prüfen",
+   "check_url": "/?cite=Art.%2041%20OR%3B%20BGE%20148%20III%2011%20E.%203.2#check"
+  }
+ ],
+ "not_indexed": [],
+ "practice_layer": true,
+ "counts": {
+  "candidates": 50,
+  "by_field": {
+   "civil": 19,
+   "criminal": 24,
+   "public": 7,
+   "social": 0
+  },
+  "unassigned": 0,
+  "shown": 3,
+  "flagged": 0
+ },
+ "method": {
+  "built_at": "2026-09-25T20:08:33Z",
+  "articles": 13198,
+  "rows": 282121,
+  "method": "v8: recency-weighted co-citation (half-life 2 y) shared among the consideration's articles + regeste / own-reasons naming the article",
+  "half_life": 2.0,
+  "top": 50,
+  "benchmark": {
+   "hit@10": 0.611,
+   "recall@10": 0.438,
+   "dev": {
+    "hit@10": 0.61,
+    "recall@10": 0.438
+   },
+   "split": "index <= 2024, test BGer 2025+ considerations; substantive articles; held-out second look (v5 passed the first look at 0.609/0.434)",
+   "progress": "citation-bench PROGRESS 2026-09-25/26"
+  }
+ },
+ "read_as": "Gelesen als: Art. 41 OR",
+ "notes": [],
+ "message": null,
+ "about": "Die Vorschläge sind publizierte Leitentscheide (BGE). Sie sind danach gereiht, wie oft das Bundesgericht sie zusammen mit dem Artikel zitiert, wobei neuere Zitate stärker zählen; nennt die Regeste oder eine Erwägung den Artikel, steigt der Entscheid in der Reihenfolge. In einem Test mit Urteilen aus dem Jahr 2025 war der Leitentscheid, den das Gericht tatsächlich zitierte, bei 61 % der Abfragen unter den ersten zehn Vorschlägen; die ersten zehn enthielten 44 % aller zitierten Leitentscheide. Unpublizierte Urteile fehlen in der Liste. Ein Vorschlag ist ein Entscheid zum Lesen: Ob er Ihre Aussage stützt, prüft diese Liste nicht, und ein Entscheid ohne Hinweis ist kein Beleg dafür, dass seine Praxis weiter gilt.",
+ "filter_note": "Filter: Zivilrecht. Die Reihenfolge ist dieselbe wie in der ganzen Liste.",
+ "plan": "firm",
+ "elapsed_s": 0.006
+}

@@ -6,7 +6,7 @@ proofread.law checks each citation against an open register of about 10 million 
 
 ## What it does
 
-Thirteen tools:
+Fourteen tools:
 
 | Tool | Input | What comes back |
 |---|---|---|
@@ -16,6 +16,7 @@ Thirteen tools:
 | `resolve_citations` | a list of up to 500 citation strings | Counts by status, one line per citation in input order, the coverage statement |
 | `coverage` | `jurisdiction` (optional: `us` or `ch`) | The coverage statement and the storage notice; `ch` gives the Swiss register with the courts held and the share of the live index each covers |
 | `render_report` | a report id from a previous check, or the full report JSON | A markdown diligence report with every row |
+| `suggest_cases` | a Swiss federal statute article or a paragraph that cites one, `domain`, `lang`, `k` (each optional) | Swiss only: the leading Federal Supreme Court cases (BGE) cited with the article, to read, in one ranked list, each labelled with its field of law and given with the quoted passage, any later change of practice, the decision's link and a link to check the citation. In the query's language |
 | `save_brief` | text, `title` (optional) | Saves the brief to the user's account (opt-in, stored encrypted) and checks it: the brief id, then the same compact result as `check_citations` |
 | `list_briefs` | none | The saved briefs: id, title, when saved and last checked, counts per tier, number of versions |
 | `get_brief` | id, `include_text` (default true), `version` (optional) | The saved text, the latest report and the versions kept; with `version`, that earlier text |
@@ -44,6 +45,36 @@ Tiers, in the words the tools use:
 | white | deep check | With `deep: true` only: whether the opinion supports the sentence it is cited for. A review queue, not a verdict |
 
 What it cannot do: resolve Westlaw (WL) or Lexis identifiers, check statutes, regulations or secondary sources, or say whether a case is still good law. Those limits are stated in every tool description and in the coverage statement that comes with every result.
+
+### Case suggestions (Switzerland)
+
+`suggest_cases` takes a Swiss federal statute article (`Art. 41 OR`, `art. 41 CO`, `Art. 8 ZGB`, `art. 9 Cst.`; lowercase and dotless forms such as `art 41 or` are read too) or a paragraph that cites articles, and lists the leading Federal Supreme Court cases (BGE) the court cites with it. Federal acts only; cantonal law is not covered. There is no free-text search: a query without an article answers with a message that no article was recognised. The answer is one ranked list in the measured order, each case labelled with its field of law; the `domain` filter keeps the same order within one field, so a filtered row keeps its overall rank (`Rang 7`, `Rang 9`, ...) and a filter note says which field is shown. Each row has the citation, date, field, the decision's language, its rank, the quoted passage (regeste or consideration), any later change of practice (a changed precedent is listed with its flag, never dropped), the decision at the court's site and a link that opens the check on proofread.law. Every string comes back in the query's language (German, French or Italian; `lang: "en"` for English), and the tool prints it as it is. A suggestion is a case to read: it has not been checked against your sentence, and a row without a flag is not evidence that its practice still holds. To check a citation, use `check_citations`.
+
+Arguments: `query` (required, up to 20,000 characters; over 1,500 it is sent as POST), `domain` (`all`, `civil`, `criminal`, `public` or `social`; default `all`), `lang` (`de`, `fr`, `it` or `en`; default the query's language), `k` (number of rows, 1 to 50; default 10). With a large `k`, rows past about 20,000 characters of text keep their header line and any practice flag and leave out the passage and links, which stay in the structured result (with the counts per field). During the trial phase it needs a paid-plan or trial API key; otherwise the API answers `plan_required` and the tool says where to upgrade.
+
+Example call, `suggest_cases` with `{"query": "Art. 41 OR, Art. 97 OR", "k": 3}` (dev instance, 2026-09-26; rows 2 and 3 cut):
+
+```
+Gelesen als: Art. 41 OR, Art. 97 OR
+1. BGE 146 IV 76, 13.11.2019, Strafrecht, FR, Rang 1
+   Das Bundesgericht zitiert diesen Entscheid zusammen mit Art. 41 OR; der Entscheid selbst nennt den Artikel nicht. Aus der Regeste: «a) Art. 110 Abs. 1 StGB; Art. 118, 121 Abs. 1 und 382 Abs. 1 StPO; ...»
+   Entscheid öffnen: https://search.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F146-IV-76%3Ade&lang=de&type=show_document
+   Zitat prüfen: https://proofread.law/?cite=Art.%2041%20OR%3B%20BGE%20146%20IV%2076#check
+...
+Die Vorschläge sind publizierte Leitentscheide (BGE). Sie sind danach gereiht, wie oft das Bundesgericht sie zusammen mit dem Artikel zitiert, [...] Ein Vorschlag ist ein Entscheid zum Lesen: Ob er Ihre Aussage stützt, prüft diese Liste nicht, und ein Entscheid ohne Hinweis ist kein Beleg dafür, dass seine Praxis weiter gilt.
+```
+
+With `"domain": "civil"` the list starts with the filter note and keeps the overall ranks:
+
+```
+Gelesen als: Art. 41 OR
+Filter: Zivilrecht. Die Reihenfolge ist dieselbe wie in der ganzen Liste.
+1. BGE 132 III 122, 13.09.2005, Zivilrecht, FR, Rang 7
+   Regeste: «Rechtmässigkeit von im Arbeitskampf eingesetzten Mitteln (Art. 28 BV; Art. 41 und 357a OR). ...»
+   ...
+```
+
+A filter that leaves no rows answers with a message saying so. A later change of practice appears right under the row it concerns, for example `Praxisänderung durch BGE 145 III 1, möglicherweise nur teilweise: <link>` followed by the regeste sentence that marks it.
 
 ## Install
 
@@ -160,6 +191,7 @@ Per month, per IP address without a key or per account with a free-tier key:
 | `check_citations`, `check_document` | 20 checks, of which 3 may be deep checks |
 | `save_brief`, `update_brief` with new text or `recheck` | each runs a default check and counts as one of those checks; a title alone is not counted. Each plan has a cap on saved briefs |
 | `resolve_citation`, `resolve_citations` | 1,000 resolves (each citation in a list counts as one) |
+| `suggest_cases` | paid plans and trials only during the trial phase; each answered query counts as one resolve (a query without an article costs nothing) |
 | `coverage`, `render_report`, `sign_up`, `billing_link` | free, not counted |
 
 There is also a limit of 20 requests an hour per IP (more on paid plans). When a limit is reached the tool returns a plain message with the retry time or the upgrade link; nothing is thrown at the protocol level.
@@ -170,7 +202,7 @@ There is also a limit of 20 requests an hour per IP (more on paid plans). When a
 
 The full policy is at [proofread.law/privacy](https://proofread.law/privacy). What applies to this server:
 
-- **What is collected.** The text or file you check leaves your machine and goes to proofread.law's own server (`PROOFREAD_API`, default `https://proofread.law`), over HTTPS, in the request that checks it. `save_brief` and `update_brief` send the brief's text and title the same way. `sign_up` sends the account owner's email address and the agent name you give it. Nothing else is sent: no conversation history, no other files, no telemetry.
+- **What is collected.** The text or file you check leaves your machine and goes to proofread.law's own server (`PROOFREAD_API`, default `https://proofread.law`), over HTTPS, in the request that checks it. `save_brief` and `update_brief` send the brief's text and title the same way; `suggest_cases` sends the query (an article, or the paragraph you give it). `sign_up` sends the account owner's email address and the agent name you give it. Nothing else is sent: no conversation history, no other files, no telemetry.
 - **Use and storage on proofread.law.** A checked input is processed in memory and discarded when the report is returned; no copy is written to disk. The exception is opt-in: a brief saved with `save_brief` or `update_brief` is stored encrypted in the user's account, with its reports and earlier versions, until `delete_brief` deletes it (permanently). No other tool saves anything. The log line per request carries the kind of input, its size, the number of citations, the tier counts and the time taken, never a citation, a party name or a word of text. With an account, proofread.law keeps the email address, the plan, a monthly count of checks and a hash of each API key.
 - **Third parties.** A citation string the register cannot resolve may be looked up in CourtListener's citation API (the citation string only, never prose). Deep check (`deep: true`) is opt-in: the clause before each citation (up to 700 characters) and the cited opinion go to the model judge; that is the only mode in which words from your document leave proofread.law. Sign-in links go through Resend; payments through Stripe, which sees the card and proofread.law does not. Requests pass through Cloudflare's edge in transit.
 - **Retention.** Inputs and reports: none, except saved briefs, which are kept until the user deletes them. Account records: until the owner asks for deletion at privacy@proofread.law.
@@ -214,7 +246,7 @@ node scripts/smoke-stdio.mjs           # spawn the stdio server, initialize, too
 node scripts/smoke-stdio.mjs --offline # the same without network
 ```
 
-Layout: `src/client.ts` is the typed HTTP client (`/verify`, `/render`, `/api/coverage`, `/v1/resolve` single and batch, `/v1/briefs`), `src/format.ts` the compact formatter for checks, `src/resolve_format.ts` the one for register answers, `src/briefs_format.ts` the one for saved briefs (`/v1/briefs`), `src/tools/<name>.ts` one file per tool, `src/server.ts` registers them, `src/cli.ts` picks the transport. The remaining register routes (`/v1/extract`, `/v1/case/{id}`, `/v1/coverage` per reporter) slot in the same way: one method on the client, one file under `src/tools/`.
+Layout: `src/client.ts` is the typed HTTP client (`/verify`, `/render`, `/api/coverage`, `/v1/resolve` single and batch, `/v1/briefs`, `/v1/suggest`), `src/format.ts` the compact formatter for checks, `src/resolve_format.ts` the one for register answers, `src/briefs_format.ts` the one for saved briefs (`/v1/briefs`), `src/suggest_format.ts` the one for case suggestions (`/v1/suggest`), `src/tools/<name>.ts` one file per tool, `src/server.ts` registers them, `src/cli.ts` picks the transport. The remaining register routes (`/v1/extract`, `/v1/case/{id}`, `/v1/coverage` per reporter) slot in the same way: one method on the client, one file under `src/tools/`.
 
 ## Publishing
 

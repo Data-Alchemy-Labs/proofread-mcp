@@ -27,9 +27,11 @@ export function resolveResult(status: ResolveResult["status"]): ResolveResult {
 /**
  * Real /v1/suggest answers (proofread-law suggest-ch 87c651e, one list in the measured order): "Art. 41 OR, Art. 97 OR" k=3 (de),
  * "art. 41 CO" k=3 (fr), "nothing here" (no_article), "Art. 41 OR" domain=civil k=3 (filter-de), "art. 41 CO" domain=social
- * (filter-empty-fr: no rows, a message), "art 41 or" k=2 (lowercase).
+ * (filter-empty-fr: no rows, a message), "art 41 or" k=2 (lowercase). United States, a BETA (proofread-law us-suggest, not deployed yet):
+ * a pleading-standard sentence with court N.D. Cal. (us: three cases; passages and context shortened with "..."), and a question
+ * (us-refused).
  */
-export function suggestFixture(name: "de" | "fr" | "noarticle" | "filter-de" | "filter-empty-fr" | "lowercase"): SuggestAnswer {
+export function suggestFixture(name: "de" | "fr" | "noarticle" | "filter-de" | "filter-empty-fr" | "lowercase" | "us" | "us-refused"): SuggestAnswer {
   return JSON.parse(readFileSync(new URL(`fixtures/suggest-${name}.json`, here), "utf8")) as SuggestAnswer;
 }
 

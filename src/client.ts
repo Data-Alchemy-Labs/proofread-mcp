@@ -1,9 +1,9 @@
 import type { Config } from "./config.js";
 import { ProofreadError } from "./errors.js";
 import { readSseReport } from "./sse.js";
-import type { Brief, BriefList, BriefVersion, CheckoutLink, Coverage, CoverageCh, Report, ResolveBatch, ResolveResult, Row, SavedBrief, SignupResult, SuggestAnswer, SuggestDomain, SuggestLang, UpdatedBrief } from "./types.js";
+import type { Brief, BriefList, BriefVersion, CheckoutLink, Coverage, CoverageCh, Report, ResolveBatch, ResolveResult, Row, SavedBrief, SignupResult, SuggestAnswer, SuggestDomain, SuggestJurisdiction, SuggestLang, UpdatedBrief } from "./types.js";
 
-export const USER_AGENT = "proofread-mcp/0.3.0 (+https://github.com/Data-Alchemy-Labs/proofread-mcp)";
+export const USER_AGENT = "proofread-mcp/0.4.0 (+https://github.com/Data-Alchemy-Labs/proofread-mcp)";
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 export const MAX_BATCH_CITES = 500;
 /** A saved brief's id as it goes into a URL path: letters, digits, hyphens, underscores (no dots, so never `..`). */
@@ -32,10 +32,15 @@ export interface VerifyOptions {
 export type Plan = "payg" | "solo" | "firm";
 
 export interface SuggestOptions {
+  /** US only: the court the brief is filed in ("9th Cir.", "N.D. Cal.", "California"), for the authority order. Sent only when non-empty. */
+  court?: string;
+  /** auto (the API's default), us or ch. Sent only when set. */
+  jurisdiction?: SuggestJurisdiction;
+  /** Swiss only. */
   domain?: SuggestDomain;
-  /** The answer's language; the API defaults to the query's language. */
+  /** Swiss only: the answer's language; the API defaults to the query's language. */
   lang?: SuggestLang;
-  /** Number of rows, 1 to 50. */
+  /** Number of rows, 1 to 50 (a US answer shows up to 3). */
   k?: number;
 }
 
@@ -65,7 +70,10 @@ export interface Client {
   getBriefVersion(id: string, v: number, signal?: AbortSignal): Promise<BriefVersion>;
   /** DELETE /v1/briefs/{id}: permanent. */
   deleteBrief(id: string, signal?: AbortSignal): Promise<void>;
-  /** GET /v1/suggest (POST for a long query): a Swiss statute article -> the leading BGE cited with it. One resolve per answered query. */
+  /**
+   * GET /v1/suggest (POST for a long query): a Swiss statute article -> the leading BGE cited with it (one resolve per answered query), or,
+   * a BETA, a US legal proposition -> up to 3 cases whose own text states it (one deep-checked citation per answer that ran the model).
+   */
   suggest(query: string, options?: SuggestOptions, signal?: AbortSignal): Promise<SuggestAnswer>;
   /** The origin of PROOFREAD_API (https://proofread.law by default): the site that the API's relative links (a suggestion's check_url) point into. */
   siteOrigin(): string;
@@ -240,6 +248,8 @@ export function createClient(config: Config, fetchImpl: FetchLike = globalThis.f
         throw new ProofreadError(413, "too_large", `the query is ${query.length.toLocaleString("en-US")} characters long`);
       }
       const params: Record<string, string | number> = {};
+      if (options.court) params.court = options.court;
+      if (options.jurisdiction !== undefined) params.jurisdiction = options.jurisdiction;
       if (options.domain !== undefined) params.domain = options.domain;
       if (options.lang !== undefined) params.lang = options.lang;
       if (options.k !== undefined) params.k = options.k;
@@ -296,12 +306,12 @@ function checkBriefShape(v: unknown): string | undefined {
   return undefined;
 }
 
-/** A suggestion answer: a status, and a list of result rows when there are any. */
+/** A suggestion answer (Swiss or US): a status, and a list of result rows when there are any, each with a cite (a US row: or a reference). */
 function checkSuggestShape(v: unknown): string | undefined {
   if (!isObject(v) || typeof v.status !== "string") return "no status field";
   if (v.results === undefined || v.results === null) return undefined;
   if (!Array.isArray(v.results)) return "results is not a list";
-  return v.results.every((r) => isObject(r) && typeof r.cite === "string") ? undefined : "a result without a cite";
+  return v.results.every((r) => isObject(r) && (typeof r.cite === "string" || typeof r.reference === "string")) ? undefined : "a result without a cite";
 }
 
 function checkReportShape(v: unknown): string | undefined {

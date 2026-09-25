@@ -13,7 +13,8 @@ export const suggestCases = defineTool({
     "Swiss law only. Give a Swiss federal statute article ('Art. 41 OR', 'art. 41 CO', 'Art. 8 ZGB', 'art. 9 Cst.') or a paragraph that cites one, " +
     "and get the leading Federal Supreme Court cases (BGE/ATF/DTF) the court cites with that article, as cases to read. " +
     "The query needs a statute article: there is no free-text search, and a query without one answers that no article was recognised. " +
-    "Results are grouped by field: the article's own field of law first, then other fields where it is also cited, each in the measured ranking order. " +
+    "Federal acts only; cantonal law is not covered. " +
+    "The answer is one ranked list, each case labelled with its field of law; the domain filter keeps the same order within one field. " +
     "Each row has the citation, date, field, rank, the quoted passage (regeste or consideration), the decision's link, a link to check the citation on proofread.law, " +
     "and any later change of practice (a changed precedent is listed with its flag, never left out; a row without a flag is not evidence that its practice still holds). " +
     "A suggestion has not been checked against the user's sentence; to check a citation, use check_citations. " +
@@ -21,11 +22,11 @@ export const suggestCases = defineTool({
     "During the trial phase it needs a paid-plan or trial API key; each answered query counts as one resolve.",
   inputSchema: {
     query: z.string().min(1).max(MAX_SUGGEST_QUERY_CHARS)
-      .describe("A Swiss statute article, e.g. 'Art. 41 OR' or 'art. 9 Cst.', or a paragraph that cites one (up to 20,000 characters)."),
+      .describe("A Swiss federal statute article, e.g. 'Art. 41 OR' or 'art. 9 Cst.', or a paragraph that cites one (up to 20,000 characters)."),
     domain: z.enum(["all", "civil", "criminal", "public", "social"]).default("all")
-      .describe("Only this field of law: civil, criminal, public or social. Default all."),
+      .describe("Only this field of law (civil, criminal, public or social), in the same order as the full list. Default all."),
     lang: z.enum(["de", "fr", "it", "en"]).optional().describe("The answer's language: de, fr, it or en. Default: the query's language."),
-    k: z.number().int().min(1).max(50).default(10).describe("Rows per section, 1 to 50. Default 10."),
+    k: z.number().int().min(1).max(50).default(10).describe("Number of rows, 1 to 50. Default 10."),
   },
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   async run({ query, domain, lang, k }, { client }, extra) {
@@ -39,27 +40,23 @@ export const suggestCases = defineTool({
   },
 });
 
-/** The answer without its passages (they are in the text): status, what was read, the sections with each row's facts, links and flags. */
+/** The answer without its passages (they are in the text): status, what was read, the counts per field, each row's facts, links and flags. */
 function structured(a: SuggestAnswer, origin: string): Record<string, unknown> {
   return {
     status: a.status,
     language: a.language ?? null,
     read_as: a.read_as ?? null,
+    filter_note: a.filter_note ?? null,
     message: a.message ?? null,
     notes: a.notes ?? [],
     understood: (a.understood ?? []).map((x) => ({ label: x.label, indexed: x.indexed ?? null })),
     domain: a.domain ?? null,
     k: a.k ?? null,
-    sections: (a.sections ?? []).map((s) => ({
-      kind: s.kind,
-      title: s.title ?? null,
-      collapsed: s.collapsed ?? false,
-      empty_note: s.empty_note ?? null,
-      results: s.results.map((r) => ({
-        rank: r.rank, ref: r.ref, cite: r.cite, date: r.date ?? null, language: r.language ?? null, domain: r.domain ?? null, field: r.field ?? null,
-        passage_kind: r.passage_kind ?? null, url: r.url ?? null, check_url: r.check_url ? siteLink(origin, r.check_url) : null,
-        practice: (r.practice ?? []).map((f) => ({ kind: f.kind, text: f.text, by: f.by ?? null, url: f.url ?? null })),
-      })),
+    counts: a.counts ?? null,
+    results: (a.results ?? []).map((r) => ({
+      rank: r.rank, ref: r.ref, cite: r.cite, date: r.date ?? null, language: r.language ?? null, domain: r.domain ?? null, field: r.field ?? null,
+      home_domain: r.home_domain ?? null, passage_kind: r.passage_kind ?? null, url: r.url ?? null, check_url: r.check_url ? siteLink(origin, r.check_url) : null,
+      practice: (r.practice ?? []).map((f) => ({ kind: f.kind, text: f.text, by: f.by ?? null, url: f.url ?? null })),
     })),
     about: a.about ?? null,
   };

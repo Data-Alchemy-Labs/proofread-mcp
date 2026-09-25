@@ -7,21 +7,13 @@
    "law": "OR",
    "art": "41",
    "para": null,
-   "raw": "Art. 41 OR",
+   "raw": "art 41 or",
    "label": "Art. 41 OR",
-   "indexed": true
-  },
-  {
-   "law": "OR",
-   "art": "97",
-   "para": null,
-   "raw": "Art. 97 OR",
-   "label": "Art. 97 OR",
    "indexed": true
   }
  ],
  "domain": "all",
- "k": 3,
+ "k": 2,
  "home_domains": [
   "civil"
  ],
@@ -107,61 +99,20 @@
    "open_label": "Entscheid öffnen",
    "check_label": "Zitat prüfen",
    "check_url": "/?cite=Art.%2041%20OR%3B%20BGE%20141%20IV%201#check"
-  },
-  {
-   "rank": 3,
-   "ref": "BGE 137 IV 246",
-   "ref_local": "BGE 137 IV 246",
-   "cite": "BGE 137 IV 246",
-   "decision_id": "bge_137 IV 246",
-   "date": "2011-07-15",
-   "language": "de",
-   "domain": "criminal",
-   "home_domain": false,
-   "passage": "Art. 81 Abs. 1 lit. b Ziff. 5 BGG; Legitimation der Privatklägerschaft. Am 1. Januar 2011 ist die revidierte Bestimmung von Art. 81 Abs. 1 lit. b Ziff. 5 BGG in Kraft getreten. Die Voraussetzung, dass sich der angefochtene Entscheid auf die Beurteilung der Zivilansprüche auswirken kann, blieb dabei unverändert. …",
-   "passage_kind": "regeste_start",
-   "passage_language": "de",
-   "erw": null,
-   "passage_article": "Art. 41 OR",
-   "regeste": null,
-   "regeste_language": null,
-   "articles": [
-    {
-     "law": "OR",
-     "art": "41",
-     "label": "Art. 41 OR",
-     "rank": 3,
-     "passage_kind": "regeste_start",
-     "regeste_names": false,
-     "reasons_names": false
-    }
-   ],
-   "score": 14.7169,
-   "n_cociting": 103,
-   "url": "https://search.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F137-IV-246%3Ade&lang=de&type=show_document",
-   "practice": [],
-   "date_display": "15.07.2011",
-   "field": "Strafrecht",
-   "passage_label": "Das Bundesgericht zitiert diesen Entscheid zusammen mit Art. 41 OR; der Entscheid selbst nennt den Artikel nicht. Aus der Regeste:",
-   "regeste_label": null,
-   "rank_label": "Rang 3",
-   "open_label": "Entscheid öffnen",
-   "check_label": "Zitat prüfen",
-   "check_url": "/?cite=Art.%2041%20OR%3B%20BGE%20137%20IV%20246#check"
   }
  ],
  "not_indexed": [],
  "practice_layer": true,
  "counts": {
-  "candidates": 93,
+  "candidates": 50,
   "by_field": {
-   "civil": 60,
+   "civil": 19,
    "criminal": 24,
    "public": 7,
-   "social": 2
+   "social": 0
   },
   "unassigned": 0,
-  "shown": 3,
+  "shown": 2,
   "flagged": 0
  },
  "method": {
@@ -182,11 +133,11 @@
    "progress": "citation-bench PROGRESS 2026-09-25/26"
   }
  },
- "read_as": "Gelesen als: Art. 41 OR, Art. 97 OR",
+ "read_as": "Gelesen als: Art. 41 OR",
  "notes": [],
  "message": null,
  "about": "Die Vorschläge sind publizierte Leitentscheide (BGE). Sie sind danach gereiht, wie oft das Bundesgericht sie zusammen mit dem Artikel zitiert, wobei neuere Zitate stärker zählen; nennt die Regeste oder eine Erwägung den Artikel, steigt der Entscheid in der Reihenfolge. In einem Test mit Urteilen aus dem Jahr 2025 war der Leitentscheid, den das Gericht tatsächlich zitierte, bei 61 % der Abfragen unter den ersten zehn Vorschlägen; die ersten zehn enthielten 44 % aller zitierten Leitentscheide. Unpublizierte Urteile fehlen in der Liste. Ein Vorschlag ist ein Entscheid zum Lesen: Ob er Ihre Aussage stützt, prüft diese Liste nicht, und ein Entscheid ohne Hinweis ist kein Beleg dafür, dass seine Praxis weiter gilt.",
  "filter_note": null,
  "plan": "firm",
- "elapsed_s": 0.129
+ "elapsed_s": 0.006
 }

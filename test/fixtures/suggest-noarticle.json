@@ -6,7 +6,7 @@
  "domain": "all",
  "k": 10,
  "home_domains": [],
- "sections": [],
+ "results": [],
  "not_indexed": [],
  "practice_layer": null,
  "counts": null,
@@ -29,10 +29,11 @@
   }
  },
  "citations_in_query": 0,
- "message": "In der Eingabe wurde kein Artikel eines Bundesgesetzes erkannt. Nennen Sie einen, zum Beispiel Art. 41 OR.",
+ "message": "In der Eingabe wurde kein Artikel eines Bundesgesetzes erkannt. Nennen Sie einen, zum Beispiel Art. 41 OR. Die Vorschläge betreffen nur Bundesrecht, keine kantonalen Erlasse.",
  "read_as": null,
  "notes": [],
  "about": null,
+ "filter_note": null,
  "plan": "firm",
- "elapsed_s": 0.0
+ "elapsed_s": 0.001
 }

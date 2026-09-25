@@ -16,7 +16,7 @@ Fourteen tools:
 | `resolve_citations` | a list of up to 500 citation strings | Counts by status, one line per citation in input order, the coverage statement |
 | `coverage` | `jurisdiction` (optional: `us` or `ch`) | The coverage statement and the storage notice; `ch` gives the Swiss register with the courts held and the share of the live index each covers |
 | `render_report` | a report id from a previous check, or the full report JSON | A markdown diligence report with every row |
-| `suggest_cases` | a Swiss statute article or a paragraph that cites one, `domain`, `lang`, `k` (each optional) | Swiss only: the leading Federal Supreme Court cases (BGE) cited with the article, to read, grouped by field (the article's own field first), each with the quoted passage, any later change of practice, the decision's link and a link to check the citation. In the query's language |
+| `suggest_cases` | a Swiss federal statute article or a paragraph that cites one, `domain`, `lang`, `k` (each optional) | Swiss only: the leading Federal Supreme Court cases (BGE) cited with the article, to read, in one ranked list, each labelled with its field of law and given with the quoted passage, any later change of practice, the decision's link and a link to check the citation. In the query's language |
 | `save_brief` | text, `title` (optional) | Saves the brief to the user's account (opt-in, stored encrypted) and checks it: the brief id, then the same compact result as `check_citations` |
 | `list_briefs` | none | The saved briefs: id, title, when saved and last checked, counts per tier, number of versions |
 | `get_brief` | id, `include_text` (default true), `version` (optional) | The saved text, the latest report and the versions kept; with `version`, that earlier text |
@@ -48,22 +48,15 @@ What it cannot do: resolve Westlaw (WL) or Lexis identifiers, check statutes, re
 
 ### Case suggestions (Switzerland)
 
-`suggest_cases` takes a Swiss statute article (`Art. 41 OR`, `art. 41 CO`, `Art. 8 ZGB`, `art. 9 Cst.`) or a paragraph that cites articles, and lists the leading Federal Supreme Court cases (BGE) the court cites with it, in the measured ranking order. There is no free-text search: a query without an article answers with a message that no article was recognised. Results come in two sections: the article's own field of law first, then the other fields where it is also cited. Each row has the citation, date, field, the decision's language, its rank, the quoted passage (regeste or consideration), any later change of practice (a changed precedent is listed with its flag, never dropped), the decision at the court's site and a link that opens the check on proofread.law. Every string comes back in the query's language (German, French or Italian; `lang: "en"` for English), and the tool prints it as it is. A suggestion is a case to read: it has not been checked against your sentence, and a row without a flag is not evidence that its practice still holds. To check a citation, use `check_citations`.
+`suggest_cases` takes a Swiss federal statute article (`Art. 41 OR`, `art. 41 CO`, `Art. 8 ZGB`, `art. 9 Cst.`; lowercase and dotless forms such as `art 41 or` are read too) or a paragraph that cites articles, and lists the leading Federal Supreme Court cases (BGE) the court cites with it. Federal acts only; cantonal law is not covered. There is no free-text search: a query without an article answers with a message that no article was recognised. The answer is one ranked list in the measured order, each case labelled with its field of law; the `domain` filter keeps the same order within one field, so a filtered row keeps its overall rank (`Rang 7`, `Rang 9`, ...) and a filter note says which field is shown. Each row has the citation, date, field, the decision's language, its rank, the quoted passage (regeste or consideration), any later change of practice (a changed precedent is listed with its flag, never dropped), the decision at the court's site and a link that opens the check on proofread.law. Every string comes back in the query's language (German, French or Italian; `lang: "en"` for English), and the tool prints it as it is. A suggestion is a case to read: it has not been checked against your sentence, and a row without a flag is not evidence that its practice still holds. To check a citation, use `check_citations`.
 
-Arguments: `query` (required, up to 20,000 characters; over 1,500 it is sent as POST), `domain` (`all`, `civil`, `criminal`, `public` or `social`; default `all`), `lang` (`de`, `fr`, `it` or `en`; default the query's language), `k` (rows per section, 1 to 50; default 10). With a large `k`, rows past about 20,000 characters of text keep their header line and any practice flag and leave out the passage and links, which stay in the structured result. During the trial phase it needs a paid-plan or trial API key; otherwise the API answers `plan_required` and the tool says where to upgrade.
+Arguments: `query` (required, up to 20,000 characters; over 1,500 it is sent as POST), `domain` (`all`, `civil`, `criminal`, `public` or `social`; default `all`), `lang` (`de`, `fr`, `it` or `en`; default the query's language), `k` (number of rows, 1 to 50; default 10). With a large `k`, rows past about 20,000 characters of text keep their header line and any practice flag and leave out the passage and links, which stay in the structured result (with the counts per field). During the trial phase it needs a paid-plan or trial API key; otherwise the API answers `plan_required` and the tool says where to upgrade.
 
-Example call, `suggest_cases` with `{"query": "Art. 41 OR, Art. 97 OR", "k": 3}` (dev instance, 2026-09-26; cut after the first row of each section):
+Example call, `suggest_cases` with `{"query": "Art. 41 OR, Art. 97 OR", "k": 3}` (dev instance, 2026-09-26; rows 2 and 3 cut):
 
 ```
 Gelesen als: Art. 41 OR, Art. 97 OR
-Entscheide aus dem Zivilrecht (3):
-1. BGE 144 III 155, 16.04.2018, Zivilrecht, DE, Rang 5
-   Regeste: «Art. 398 Abs. 2 i.V.m. Art. 97 Abs. 1 und Art. 42 Abs. 1 und 2 OR; Bestimmung des Schadens. Bestimmung des im Rahmen einer pflichtwidrigen Anlageberatung aus einzelnen Anlagen erwachsenen Schadens in Abgrenzung zur Schadensbestimmung bei einem gesamthaft pflichtwidrig verwalteten Portfolio (E. 2).»
-   Entscheid öffnen: https://search.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F144-III-155%3Ade&lang=de&type=show_document
-   Zitat prüfen: https://proofread.law/?cite=Art.%2097%20OR%3B%20BGE%20144%20III%20155#check
-...
-Mit diesen Artikeln auch in anderen Rechtsgebieten zitiert (3):
-4. BGE 146 IV 76, 13.11.2019, Strafrecht, FR, Rang 1
+1. BGE 146 IV 76, 13.11.2019, Strafrecht, FR, Rang 1
    Das Bundesgericht zitiert diesen Entscheid zusammen mit Art. 41 OR; der Entscheid selbst nennt den Artikel nicht. Aus der Regeste: «a) Art. 110 Abs. 1 StGB; Art. 118, 121 Abs. 1 und 382 Abs. 1 StPO; ...»
    Entscheid öffnen: https://search.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F146-IV-76%3Ade&lang=de&type=show_document
    Zitat prüfen: https://proofread.law/?cite=Art.%2041%20OR%3B%20BGE%20146%20IV%2076#check
@@ -71,7 +64,17 @@ Mit diesen Artikeln auch in anderen Rechtsgebieten zitiert (3):
 Die Vorschläge sind publizierte Leitentscheide (BGE). Sie sind danach gereiht, wie oft das Bundesgericht sie zusammen mit dem Artikel zitiert, [...] Ein Vorschlag ist ein Entscheid zum Lesen: Ob er Ihre Aussage stützt, prüft diese Liste nicht, und ein Entscheid ohne Hinweis ist kein Beleg dafür, dass seine Praxis weiter gilt.
 ```
 
-A later change of practice appears right under the row it concerns, for example `Praxisänderung durch BGE 145 III 1, möglicherweise nur teilweise: <link>` followed by the regeste sentence that marks it.
+With `"domain": "civil"` the list starts with the filter note and keeps the overall ranks:
+
+```
+Gelesen als: Art. 41 OR
+Filter: Zivilrecht. Die Reihenfolge ist dieselbe wie in der ganzen Liste.
+1. BGE 132 III 122, 13.09.2005, Zivilrecht, FR, Rang 7
+   Regeste: «Rechtmässigkeit von im Arbeitskampf eingesetzten Mitteln (Art. 28 BV; Art. 41 und 357a OR). ...»
+   ...
+```
+
+A filter that leaves no rows answers with a message saying so. A later change of practice appears right under the row it concerns, for example `Praxisänderung durch BGE 145 III 1, möglicherweise nur teilweise: <link>` followed by the regeste sentence that marks it.
 
 ## Install
 

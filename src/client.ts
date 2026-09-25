@@ -35,7 +35,7 @@ export interface SuggestOptions {
   domain?: SuggestDomain;
   /** The answer's language; the API defaults to the query's language. */
   lang?: SuggestLang;
-  /** Rows per section, 1 to 50. */
+  /** Number of rows, 1 to 50. */
   k?: number;
 }
 
@@ -296,12 +296,12 @@ function checkBriefShape(v: unknown): string | undefined {
   return undefined;
 }
 
-/** A suggestion answer: a status, and sections that each carry a list of results when there are any. */
+/** A suggestion answer: a status, and a list of result rows when there are any. */
 function checkSuggestShape(v: unknown): string | undefined {
   if (!isObject(v) || typeof v.status !== "string") return "no status field";
-  if (v.sections === undefined || v.sections === null) return undefined;
-  if (!Array.isArray(v.sections)) return "sections is not a list";
-  return v.sections.every((s) => isObject(s) && Array.isArray(s.results)) ? undefined : "a section without results";
+  if (v.results === undefined || v.results === null) return undefined;
+  if (!Array.isArray(v.results)) return "results is not a list";
+  return v.results.every((r) => isObject(r) && typeof r.cite === "string") ? undefined : "a result without a cite";
 }
 
 function checkReportShape(v: unknown): string | undefined {

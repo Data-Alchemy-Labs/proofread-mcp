@@ -10,4 +10,4 @@ export { formatSuggest, siteLink, MAX_SUGGEST_CHARS } from "./suggest_format.js"
 export { tools } from "./tools/index.js";
 export type { Report, Row, Summary, Tier, Coverage, ResolveResult, ResolveBatch, ResolveStatus, ResolveCase, ResolveCoverage, SignupResult, CheckoutLink } from "./types.js";
 export type { Brief, BriefChangeItem, BriefChanges, BriefList, BriefListItem, BriefSummary, BriefVersion, BriefVersionInfo, SavedBrief, UpdatedBrief } from "./types.js";
-export type { PracticeFlag, SuggestAnswer, SuggestArticle, SuggestDomain, SuggestLang, SuggestResult, SuggestSection, SuggestStatus } from "./types.js";
+export type { PracticeFlag, SuggestAnswer, SuggestArticle, SuggestCounts, SuggestDomain, SuggestLang, SuggestResult, SuggestStatus } from "./types.js";

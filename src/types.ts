@@ -243,9 +243,10 @@ export interface BriefVersion {
   summary?: BriefSummary | null;
 }
 
-// Case suggestions, Switzerland (GET and POST /v1/suggest): a statute article -> the leading Federal Supreme Court cases (BGE) cited with it.
-// Every string a reader sees (read_as, message, notes, about, section titles, fields, labels, practice flags) comes back worded in the
-// query's language (de/fr/it, or en), so the formatter prints them as they are. The API is new: every field past the status is optional
+// Case suggestions, Switzerland (GET and POST /v1/suggest): a federal statute article -> the leading Federal Supreme Court cases (BGE)
+// cited with it, one list in the measured order, each row labelled with its field. Every string a reader sees (read_as, filter_note,
+// message, notes, about, fields, labels, practice flags) comes back worded in the query's language (de/fr/it, or en), so the formatter
+// prints them as they are. The API is new: every field past the status is optional
 // and a missing one is left out of the text rather than guessed.
 
 export type SuggestDomain = "all" | "civil" | "criminal" | "public" | "social";
@@ -273,7 +274,7 @@ export interface PracticeFlag {
 }
 
 export interface SuggestResult {
-  /** The position in the overall measured ranking (a section keeps that order). */
+  /** The position in the full measured list: 1..n unfiltered; under a domain filter the rows keep their overall rank (7, 9, 10...). */
   rank: number;
   ref: string;
   /** Localised, with the consideration when there is one: "ATF 132 III 122 consid. 4.3". */
@@ -305,14 +306,14 @@ export interface SuggestResult {
   [key: string]: unknown;
 }
 
-export interface SuggestSection {
-  /** home: the article's own field of law; other: also cited with the article in other fields (collapsed on the web page). */
-  kind: "home" | "other" | string;
-  title?: string | null;
-  collapsed?: boolean;
-  empty_note?: string | null;
-  domains?: string[];
-  results: SuggestResult[];
+/** How many candidates the article has in all, and per field; the web page shows them on the filter buttons. */
+export interface SuggestCounts {
+  candidates?: number;
+  by_field?: Partial<Record<"civil" | "criminal" | "public" | "social", number>>;
+  unassigned?: number;
+  shown?: number;
+  flagged?: number;
+  [key: string]: unknown;
 }
 
 export interface SuggestAnswer {
@@ -321,14 +322,17 @@ export interface SuggestAnswer {
   query_language?: string;
   understood?: SuggestArticle[];
   read_as?: string | null;
-  /** Set for no_article and not_indexed. */
+  /** Set when domain is not all: the field shown, in the same order as the full list. */
+  filter_note?: string | null;
+  /** Set for no_article and not_indexed, and when a domain filter leaves no rows. */
   message?: string | null;
   notes?: string[];
   domain?: string;
   k?: number;
   home_domains?: string[];
-  sections?: SuggestSection[];
-  counts?: Record<string, number> | null;
+  /** One list in the measured order (empty for no_article, not_indexed, or a filter that leaves no rows). */
+  results?: SuggestResult[];
+  counts?: SuggestCounts | null;
   practice_layer?: boolean | null;
   /** The method and its measured numbers, one paragraph. */
   about?: string | null;

@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "proofread-mcp",
   "display_name": "proofread.law",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Check US and Swiss case citations against open registers of court opinions.",
-  "long_description": "proofread.law checks every case citation in a draft against an open register of about 10 million US court opinions (CourtListener bulk data). Each row comes back as red (check this: the register holds something concrete that disagrees), orange (cannot verify: nothing to check against, such as a Westlaw or Lexis identifier), green (found) or, with the opt-in deep check, whether the opinion supports the sentence it is cited for. Every result carries the coverage statement. A checked text is not stored; saving a brief is opt-in (stored encrypted in your account, deleted when you delete it), so you can edit it and re-check what changed. For Swiss law, suggest_cases takes a federal statute article (Art. 41 OR, art. 9 Cst.) and lists the leading Federal Supreme Court cases cited with it, as cases to read (paid plans and trials for now). Not covered: Westlaw/Lexis identifiers, statutes, regulations, secondary sources, whether a case is still good law.",
+  "long_description": "proofread.law checks every case citation in a draft against an open register of about 10 million US court opinions (CourtListener bulk data). Each row comes back as red (check this: the register holds something concrete that disagrees), orange (cannot verify: nothing to check against, such as a Westlaw or Lexis identifier), green (found) or, with the opt-in deep check, whether the opinion supports the sentence it is cited for. Every result carries the coverage statement. A checked text is not stored; saving a brief is opt-in (stored encrypted in your account, deleted when you delete it), so you can edit it and re-check what changed. suggest_cases lists cases to read: for a Swiss federal statute article (Art. 41 OR, art. 9 Cst.), the leading Federal Supreme Court cases cited with it; for a sentence of US law (a beta), up to 3 cases whose own text states it, each with the passage matched (paid plans and trials for now). Not covered: Westlaw/Lexis identifiers, statutes, regulations, secondary sources, whether a case is still good law.",
   "author": {
     "name": "Data Alchemy Labs",
     "email": "hello@proofread.law",
@@ -64,7 +64,7 @@
     },
     {
       "name": "suggest_cases",
-      "description": "Swiss only: a federal statute article to the leading Federal Supreme Court cases (BGE) cited with it, to read, in one ranked list labelled by field, with the quoted passage and any later change of practice"
+      "description": "Cases to read: a Swiss federal statute article to the leading Federal Supreme Court cases (BGE) cited with it, in one ranked list with the quoted passage and any later change of practice; or, as a US beta, a sentence of US law to up to 3 cases whose own text states it, each with the passage matched"
     },
     {
       "name": "save_brief",

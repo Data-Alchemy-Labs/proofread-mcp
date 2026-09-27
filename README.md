@@ -16,7 +16,7 @@ Fourteen tools:
 | `resolve_citations` | a list of up to 500 citation strings | Counts by status, one line per citation in input order, the coverage statement |
 | `coverage` | `jurisdiction` (optional: `us` or `ch`) | The coverage statement and the storage notice; `ch` gives the Swiss register with the courts held and the share of the live index each covers |
 | `render_report` | a report id from a previous check, or the full report JSON | A markdown diligence report with every row |
-| `suggest_cases` | a Swiss federal statute article or a paragraph that cites one, `domain`, `lang`, `k` (each optional) | Swiss only: the leading Federal Supreme Court cases (BGE) cited with the article, to read, in one ranked list, each labelled with its field of law and given with the quoted passage, any later change of practice, the decision's link and a link to check the citation. In the query's language |
+| `suggest_cases` | a Swiss federal statute article or a paragraph that cites one, or a sentence of US law; `court`, `jurisdiction`, `domain`, `lang`, `k` (each optional) | Swiss: the leading Federal Supreme Court cases (BGE) cited with the article, to read, in one ranked list, each labelled with its field of law and given with the quoted passage, any later change of practice, the decision's link and a link to check the citation; in the query's language. US (beta): up to 3 cases whose own text states the sentence, each with the passage the model matched, the paragraphs around it, how it binds the court you name, the opinion's link and a link to check the citation |
 | `save_brief` | text, `title` (optional) | Saves the brief to the user's account (opt-in, stored encrypted) and checks it: the brief id, then the same compact result as `check_citations` |
 | `list_briefs` | none | The saved briefs: id, title, when saved and last checked, counts per tier, number of versions |
 | `get_brief` | id, `include_text` (default true), `version` (optional) | The saved text, the latest report and the versions kept; with `version`, that earlier text |
@@ -75,6 +75,41 @@ Filter: Zivilrecht. Die Reihenfolge ist dieselbe wie in der ganzen Liste.
 ```
 
 A filter that leaves no rows answers with a message saying so. A later change of practice appears right under the row it concerns, for example `Praxisänderung durch BGE 145 III 1, möglicherweise nur teilweise: <link>` followed by the regeste sentence that marks it.
+
+### Case suggestions (United States, beta)
+
+`suggest_cases` also takes a sentence from a US draft that states a rule of law (one sentence, or a short paragraph up to 1,500 characters) and lists up to 3 cases whose own text states it. A model reads the opinion of the court in each of the top 10 candidates, and a case is shown only when the model finds a passage in it that states the sentence. Each row has the reference, the court, the year, how the case stands to the court you name (binding here, same circuit, persuasive), any later history the citator found (reversed in part, superseded by statute), the passage the model matched with the paragraphs before and after it (each cut to about 600 characters), a link to the opinion on CourtListener and a link that opens the check on proofread.law. Cases that a later court overruled or reversed are left out, and a note names them.
+
+This is a beta. Every answer starts with a line that says so, with the measured numbers: of 73 cases shown for 50 sentences from filed briefs, 59 (81%) support the sentence and 1 does not, as read blind by two model readers, not practising lawyers ([details](https://proofread.law/measurements#suggestions)). Read the passage before you cite the case. A suggestion is a case to read; to check a citation, use `check_citations`.
+
+Arguments: `court` (optional, up to 200 characters) is the court the brief is filed in: a federal court of appeals (`9th Cir.`, `Ninth Circuit`, `ca9`), a district court (`N.D. Cal.`, `S.D.N.Y.`, `cand`), or a state or territory name or postal code (`California`, `CA`) for the federal court there. Cases that bind that court come first; without a court, Supreme Court cases come first. State courts are not read yet; a court the API does not read comes back as an error that says what it reads. `jurisdiction` is `auto` by default: a Swiss statute article, or German, French or Italian text, is Swiss, and anything else is a US sentence; `us` or `ch` sets it. `domain`, `lang` and `k` apply to Swiss answers only, and a US answer is in English.
+
+Input that states no rule of law (a question, a citation or case name, a heading, a statement about the record or a party's argument, or more than 1,500 characters) gets no list. The answer says what to paste instead and gives an example sentence, and it costs nothing. A US answer that ran the model counts as one deep-checked citation, not a resolve. When the day's budget for model calls is spent, US suggestions are back the next day (UTC).
+
+Example call, `suggest_cases` with a sentence on the plausibility pleading standard and `"court": "N.D. Cal."` (dev instance, 2026-09-26; the passage and the paragraphs around it shortened, rows 2 and 3 cut):
+
+```
+Beta: Each case is shown with the passage we matched; read it before you cite the case. Measured: 81% of shown cases support the sentence, 1 in 73 did not (details on https://proofread.law/measurements#suggestions).
+Ordered for N.D. Cal. (Ninth Circuit): binding cases first.
+1. Bell Atlantic Corp. v. Twombly, 550 U.S. 544 (2007), Supreme Court, 2007, Binding here (Supreme Court)
+   The passage we matched: "Here, in contrast, we do not require heightened fact pleading of specifics, but only enough facts to state a claim to relief that is plausible on its face. Because the plaintiffs here have not nudged ..."
+   Before: "Plaintiffs say that our analysis runs counter to Swierkiewicz, 534 U. S., at 508 , which held that “a complaint in an employment discrimination lawsuit [need] n..."
+   After: "The judgment of the Court of Appeals for the Second Circuit is reversed, and the case is remanded for further proceedings consistent with this opinion...."
+   Read the opinion: https://www.courtlistener.com/opinion/145730/bell-atlantic-corp-v-twombly/
+   Check this citation: https://proofread.law/?cite=Bell%20Atlantic%20Corp.%20v.%20Twombly%2C%20550%20U.S.%20544%20%282007%29#check
+2. Ashcroft v. Iqbal, 556 U.S. 662 (2009), Supreme Court, 2009, Binding here (Supreme Court)
+...
+3. Greg Landers v. Quality Communications, Inc., 771 F.3d 638 (9th Cir. 2014), Court of Appeals for the Ninth Circuit, 2014, Binding here
+...
+How we build this list: we search the sentences in which federal appellate courts and the Supreme Court cite a case, and the cases' own text. [...] We leave out cases that a later court overruled or reversed.
+```
+
+A question gets the beta line, then the API's message and an example:
+
+```
+This reads as a question. Paste the rule itself, as a sentence, and we will look for cases that state it.
+For example: "A complaint must contain sufficient factual matter, accepted as true, to state a claim to relief that is plausible on its face."
+```
 
 ## Install
 
@@ -191,7 +226,7 @@ Per month, per IP address without a key or per account with a free-tier key:
 | `check_citations`, `check_document` | 20 checks, of which 3 may be deep checks |
 | `save_brief`, `update_brief` with new text or `recheck` | each runs a default check and counts as one of those checks; a title alone is not counted. Each plan has a cap on saved briefs |
 | `resolve_citation`, `resolve_citations` | 1,000 resolves (each citation in a list counts as one) |
-| `suggest_cases` | paid plans and trials only during the trial phase; each answered query counts as one resolve (a query without an article costs nothing) |
+| `suggest_cases` | paid plans and trials only during the trial phase; a Swiss answer counts as one resolve (a query without an article costs nothing); a US answer that ran the model counts as one deep-checked citation (input that states no rule of law costs nothing) |
 | `coverage`, `render_report`, `sign_up`, `billing_link` | free, not counted |
 
 There is also a limit of 20 requests an hour per IP (more on paid plans). When a limit is reached the tool returns a plain message with the retry time or the upgrade link; nothing is thrown at the protocol level.
@@ -202,9 +237,9 @@ There is also a limit of 20 requests an hour per IP (more on paid plans). When a
 
 The full policy is at [proofread.law/privacy](https://proofread.law/privacy). What applies to this server:
 
-- **What is collected.** The text or file you check leaves your machine and goes to proofread.law's own server (`PROOFREAD_API`, default `https://proofread.law`), over HTTPS, in the request that checks it. `save_brief` and `update_brief` send the brief's text and title the same way; `suggest_cases` sends the query (an article, or the paragraph you give it). `sign_up` sends the account owner's email address and the agent name you give it. Nothing else is sent: no conversation history, no other files, no telemetry.
+- **What is collected.** The text or file you check leaves your machine and goes to proofread.law's own server (`PROOFREAD_API`, default `https://proofread.law`), over HTTPS, in the request that checks it. `save_brief` and `update_brief` send the brief's text and title the same way; `suggest_cases` sends the query (an article, a sentence, or the paragraph you give it) and the court, if you name one. `sign_up` sends the account owner's email address and the agent name you give it. Nothing else is sent: no conversation history, no other files, no telemetry.
 - **Use and storage on proofread.law.** A checked input is processed in memory and discarded when the report is returned; no copy is written to disk. The exception is opt-in: a brief saved with `save_brief` or `update_brief` is stored encrypted in the user's account, with its reports and earlier versions, until `delete_brief` deletes it (permanently). No other tool saves anything. The log line per request carries the kind of input, its size, the number of citations, the tier counts and the time taken, never a citation, a party name or a word of text. With an account, proofread.law keeps the email address, the plan, a monthly count of checks and a hash of each API key.
-- **Third parties.** A citation string the register cannot resolve may be looked up in CourtListener's citation API (the citation string only, never prose). Deep check (`deep: true`) is opt-in: the clause before each citation (up to 700 characters) and the cited opinion go to the model judge; that is the only mode in which words from your document leave proofread.law. Sign-in links go through Resend; payments through Stripe, which sees the card and proofread.law does not. Requests pass through Cloudflare's edge in transit.
+- **Third parties.** A citation string the register cannot resolve may be looked up in CourtListener's citation API (the citation string only, never prose). Deep check (`deep: true`) is opt-in: the clause before each citation (up to 700 characters) and the cited opinion go to the model judge. A US `suggest_cases` query (the beta) goes to the same model judge, with the opinions of the candidate cases. Those two are the only cases in which words you send leave proofread.law. Sign-in links go through Resend; payments through Stripe, which sees the card and proofread.law does not. Requests pass through Cloudflare's edge in transit.
 - **Retention.** Inputs and reports: none, except saved briefs, which are kept until the user deletes them. Account records: until the owner asks for deletion at privacy@proofread.law.
 - **This server.** It stores nothing on disk, saved briefs included (they live in the proofread.law account, not here). It keeps the last 50 reports in memory so `render_report` can be called with a short id; they are gone when the process exits. The API key lives in your MCP client's configuration (Claude Desktop stores the extension's key as a sensitive setting); a key from `sign_up` is held in memory for the session and shown to you once so you can store it. It is sent only to `PROOFREAD_API`, as an `Authorization: Bearer` header. If a deep-check stream stops before every citation was judged, the tool answers with an error that says how many were checked; it never presents a partial deep check as a finished one.
 - **Contact.** Data Alchemy Labs, privacy@proofread.law.

@@ -1,0 +1,57 @@
+{
+ "status": "refused",
+ "jurisdiction": "us",
+ "beta": true,
+ "beta_note": "Each case is shown with the passage we matched; read it before you cite the case. Measured: 81% of shown cases support the sentence, 1 in 73 did not (details on /measurements).",
+ "language": "en",
+ "court": null,
+ "court_note": "No court chosen: Supreme Court cases come first. Choose your court to see which cases bind it.",
+ "message": "This reads as a question. Paste the rule itself, as a sentence, and we will look for cases that state it.",
+ "refusal": {
+  "reason": "question",
+  "p_law": null,
+  "p_record": null
+ },
+ "notes": [],
+ "results": [],
+ "not_shown": [],
+ "counts": null,
+ "about": "How we build this list: we search the sentences in which federal appellate courts and the Supreme Court cite a case, and the cases' own text. A judgment model then reads the opinion of the court in each of the top 10 candidates. We show a case only when the model finds a passage in it that states your sentence, at confidence 0.8 or higher. We leave out cases that a later court overruled or reversed.",
+ "method": {
+  "name": "rrf+judge v2 (set C settings)",
+  "gate": true,
+  "authority_order": true,
+  "widening": 0,
+  "citator": true,
+  "candidates": 10,
+  "shown": 3,
+  "support_threshold": 0.8,
+  "judge_timeout_s": 8.0,
+  "budget_s": 15.0,
+  "engine": "0.7.0",
+  "measured": {
+   "set": "C",
+   "date": "2026-09-26",
+   "engine": "0.7.0",
+   "shown": 73,
+   "supports": 59,
+   "partial": 13,
+   "wrong": 1,
+   "sentences": 50,
+   "sentences_with_support": 23,
+   "supports_ci95": [
+    70,
+    88
+   ],
+   "readers": "two blind model readers per item, a third on the one disagreement",
+   "source": "citation-bench PROGRESS.md Phase 8, round 3, set C"
+  }
+ },
+ "k": 3,
+ "example": "A complaint must contain sufficient factual matter, accepted as true, to state a claim to relief that is plausible on its face.",
+ "timing": {
+  "total_s": 0.0
+ },
+ "plan": "firm",
+ "elapsed_s": 0.01
+}

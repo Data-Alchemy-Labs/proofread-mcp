@@ -243,16 +243,26 @@ export interface BriefVersion {
   summary?: BriefSummary | null;
 }
 
-// Case suggestions, Switzerland (GET and POST /v1/suggest): a federal statute article -> the leading Federal Supreme Court cases (BGE)
-// cited with it, one list in the measured order, each row labelled with its field. Every string a reader sees (read_as, filter_note,
-// message, notes, about, fields, labels, practice flags) comes back worded in the query's language (de/fr/it, or en), so the formatter
-// prints them as they are. The API is new: every field past the status is optional
+// Case suggestions (GET and POST /v1/suggest), one route for two lists. Switzerland: a federal statute article -> the leading Federal
+// Supreme Court cases (BGE) cited with it, one list in the measured order, each row labelled with its field. Every string a reader sees
+// (read_as, filter_note, message, notes, about, fields, labels, practice flags) comes back worded in the query's language (de/fr/it, or
+// en), so the formatter prints them as they are. United States, a BETA (jurisdiction "us"): a legal proposition -> up to 3 cases whose
+// own text states it, each with the passage the judgment model matched and its neighbouring paragraphs, binding cases first for the
+// court given; English only, with the measured beta line on every answer. The API is new: every field past the status is optional
 // and a missing one is left out of the text rather than guessed.
 
 export type SuggestDomain = "all" | "civil" | "criminal" | "public" | "social";
 export type SuggestLang = "de" | "fr" | "it" | "en";
-/** ok, no_article (no statute article recognised in the query), not_indexed (the articles named have no leading case in the index). */
-export type SuggestStatus = "ok" | "no_article" | "not_indexed";
+/** auto (the API's default: a Swiss statute article, or German, French or Italian text, is Swiss; anything else is a US proposition), us, ch. */
+export type SuggestJurisdiction = "auto" | "us" | "ch";
+/**
+ * Switzerland: ok, no_article (no statute article recognised in the query), not_indexed (the articles named have no leading case in the
+ * index). United States: ok (the list, possibly empty, with a message then), refused (the input states no rule of law; `message` says
+ * what to paste instead).
+ */
+export type SuggestStatus = "ok" | "no_article" | "not_indexed" | "refused";
+/** Why a US input was turned away (the model was not asked, and it cost nothing). */
+export type SuggestRefusalReason = "empty" | "question" | "citation" | "heading" | "record_or_argument" | "no_legal_proposition" | "too_long";
 
 export interface SuggestArticle {
   law: string;
@@ -273,11 +283,33 @@ export interface PracticeFlag {
   [key: string]: unknown;
 }
 
+/** US: the citator's word on a shown case (reversed_in_part, superseded_by_statute, criticized, questioned). */
+export interface SuggestFlag {
+  kind: "reversed_in_part" | "superseded_by_statute" | "criticized" | "questioned" | string;
+  text: string;
+  [key: string]: unknown;
+}
+
+/** US: the paragraphs before and after the matched passage (each can be long). */
+export interface SuggestContext {
+  before?: string | null;
+  after?: string | null;
+  [key: string]: unknown;
+}
+
+/** US: the judgment model's reading of the passage against the sentence (only supports at 0.8 or higher is shown). */
+export interface SuggestSupport {
+  relation?: string | null;
+  confidence?: number | null;
+  [key: string]: unknown;
+}
+
 export interface SuggestResult {
   /** The position in the full measured list: 1..n unfiltered; under a domain filter the rows keep their overall rank (7, 9, 10...). */
   rank: number;
-  ref: string;
-  /** Localised, with the consideration when there is one: "ATF 132 III 122 consid. 4.3". */
+  /** Swiss rows; a US row carries `reference` instead. */
+  ref?: string;
+  /** Localised, with the consideration when there is one: "ATF 132 III 122 consid. 4.3". US: the same as `reference`. */
   cite: string;
   date?: string | null;
   date_display?: string | null;
@@ -303,6 +335,58 @@ export interface SuggestResult {
   open_label?: string | null;
   check_label?: string | null;
   practice?: PracticeFlag[];
+  // United States (BETA) rows
+  /** "Ashcroft v. Iqbal, 556 U.S. 662 (2009)". */
+  reference?: string;
+  /** The position the search found it at, before the authority order. */
+  retrieval_rank?: number | null;
+  cluster_id?: number | null;
+  case_name?: string | null;
+  cites?: string[];
+  year?: string | null;
+  /** The court's id (scotus, ca9, cand). */
+  court?: string | null;
+  /** "Supreme Court", "Court of Appeals for the Ninth Circuit". */
+  court_name?: string | null;
+  /** The authority code relative to the court given (scotus, own_circuit, ...), and its tier (0 Supreme Court, 1 binding here, ...). */
+  authority?: string | null;
+  tier?: number | null;
+  /** "Binding here", "Persuasive: another circuit", ...; with no court chosen, "Supreme Court" or null. */
+  authority_label?: string | null;
+  binding?: boolean | null;
+  context?: SuggestContext | null;
+  context_label?: string | null;
+  /** Set when the paragraph is in a separate opinion (a concurrence, a dissent), with opinion_note saying so. */
+  opinion?: string | null;
+  opinion_note?: string | null;
+  quote?: string | null;
+  support?: SuggestSupport | null;
+  flags?: SuggestFlag[];
+  citator_checked?: boolean;
+  [key: string]: unknown;
+}
+
+/** US: the filing court the list is ordered for. */
+export interface SuggestCourt {
+  id: string;
+  label: string;
+  circuit?: string | null;
+  state?: string | null;
+  [key: string]: unknown;
+}
+
+/** US: why the input got no list. */
+export interface SuggestRefusal {
+  reason: SuggestRefusalReason | string;
+  [key: string]: unknown;
+}
+
+/** US: a case that passed the check but is left out (a later court overruled or reversed it); its text is also in `notes`. */
+export interface SuggestNotShown {
+  reference: string;
+  cluster_id?: number | null;
+  reason?: string | null;
+  text?: string | null;
   [key: string]: unknown;
 }
 
@@ -313,11 +397,21 @@ export interface SuggestCounts {
   unassigned?: number;
   shown?: number;
   flagged?: number;
+  // United States: candidates retrieved, judged by the model, verified (passed the check), shown, not shown (overruled or reversed),
+  // not checked in time, and judge errors.
+  retrieved?: number;
+  judged?: number;
+  verified?: number;
+  not_shown?: number;
+  not_checked?: number;
+  errors?: number;
   [key: string]: unknown;
 }
 
 export interface SuggestAnswer {
   status: SuggestStatus | string;
+  /** "ch" or "us" (absent on answers from before the US beta, which are Swiss). */
+  jurisdiction?: "ch" | "us" | string;
   language?: string;
   query_language?: string;
   understood?: SuggestArticle[];
@@ -339,5 +433,17 @@ export interface SuggestAnswer {
   method?: Record<string, unknown> | null;
   plan?: string;
   elapsed_s?: number;
+  // United States (BETA)
+  beta?: boolean;
+  /** The fixed line with the measured numbers, to repeat to the user; it names the site path /measurements. */
+  beta_note?: string | null;
+  /** The filing court the list is ordered for, or null (no court: Supreme Court cases first). */
+  court?: SuggestCourt | null;
+  court_note?: string | null;
+  refusal?: SuggestRefusal | null;
+  /** An example sentence (printed after a refusal). */
+  example?: string | null;
+  not_shown?: SuggestNotShown[];
+  timing?: Record<string, unknown> | null;
   [key: string]: unknown;
 }

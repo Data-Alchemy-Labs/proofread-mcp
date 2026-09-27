@@ -1,0 +1,206 @@
+{
+ "status": "ok",
+ "jurisdiction": "us",
+ "beta": true,
+ "beta_note": "Each case is shown with the passage we matched; read it before you cite the case. Measured: 81% of shown cases support the sentence, 1 in 73 did not (details on /measurements).",
+ "language": "en",
+ "court": {
+  "id": "cand",
+  "label": "N.D. Cal. (Ninth Circuit)",
+  "circuit": "ca9",
+  "state": "California"
+ },
+ "court_note": "Ordered for N.D. Cal. (Ninth Circuit): binding cases first.",
+ "message": null,
+ "refusal": null,
+ "notes": [],
+ "results": [
+  {
+   "rank": 1,
+   "retrieval_rank": 3,
+   "reference": "Bell Atlantic Corp. v. Twombly, 550 U.S. 544 (2007)",
+   "cite": "Bell Atlantic Corp. v. Twombly, 550 U.S. 544 (2007)",
+   "cluster_id": 145730,
+   "case_name": "Bell Atlantic Corp. v. Twombly",
+   "cites": [
+    "550 U.S. 544",
+    "127 S. Ct. 1955",
+    "167 L. Ed. 2d 929"
+   ],
+   "date": "2007-05-21",
+   "date_display": "2007-05-21",
+   "year": "2007",
+   "court": "scotus",
+   "court_name": "Supreme Court",
+   "authority": "scotus",
+   "tier": 0,
+   "authority_label": "Binding here (Supreme Court)",
+   "binding": true,
+   "passage": "Here, in contrast, we do not require heightened fact pleading of specifics, but only enough facts to state a claim to relief that is plausible on its face. Because the plaintiffs here have not nudged ...",
+   "passage_kind": "judged_paragraph",
+   "passage_label": "The passage we matched",
+   "context": {
+    "before": "Plaintiffs say that our analysis runs counter to Swierkiewicz, 534 U. S., at 508 , which held that “a complaint in an employment discrimination lawsuit [need] n...",
+    "after": "The judgment of the Court of Appeals for the Second Circuit is reversed, and the case is remanded for further proceedings consistent with this opinion...."
+   },
+   "context_label": "Show the paragraphs before and after",
+   "opinion": null,
+   "opinion_note": null,
+   "quote": "Here, in contrast, we do not require heightened fact pleading of specifics, but only enough facts to state a claim to relief that is plausible on its face. Because the plaintiffs here have not nudged their claims across the line from conceivable to plausible, their complaint must be dismissed.\n* * *",
+   "support": {
+    "relation": "supports",
+    "confidence": 1
+   },
+   "flags": [],
+   "citator_checked": true,
+   "url": "https://www.courtlistener.com/opinion/145730/bell-atlantic-corp-v-twombly/",
+   "check_url": "/?cite=Bell%20Atlantic%20Corp.%20v.%20Twombly%2C%20550%20U.S.%20544%20%282007%29#check",
+   "open_label": "Read the opinion",
+   "check_label": "Check this citation",
+   "rank_label": null,
+   "language": "en"
+  },
+  {
+   "rank": 2,
+   "retrieval_rank": 5,
+   "reference": "Ashcroft v. Iqbal, 556 U.S. 662 (2009)",
+   "cite": "Ashcroft v. Iqbal, 556 U.S. 662 (2009)",
+   "cluster_id": 145875,
+   "case_name": "Ashcroft v. Iqbal",
+   "cites": [
+    "556 U.S. 662",
+    "129 S. Ct. 1937",
+    "173 L. Ed. 2d 868"
+   ],
+   "date": "2009-05-18",
+   "date_display": "2009-05-18",
+   "year": "2009",
+   "court": "scotus",
+   "court_name": "Supreme Court",
+   "authority": "scotus",
+   "tier": 0,
+   "authority_label": "Binding here (Supreme Court)",
+   "binding": true,
+   "passage": "To survive a motion to dismiss, a complaint must contain sufficient factual matter, accepted as true, to “state a claim to relief that is plausible on its face.” Id., at 570 . A claim has facial plaus...",
+   "passage_kind": "judged_paragraph",
+   "passage_label": "The passage we matched",
+   "context": {
+    "before": "We turn to respondent’s complaint. Under Federal Rule of Civil Procedure 8(a)(2), a pleading must contain a “short and plain statement of the claim showing that...",
+    "after": "Two working principles underlie our decision in Twombly . First, the tenet that a court must accept as true all of the allegations contained in a complaint is i..."
+   },
+   "context_label": "Show the paragraphs before and after",
+   "opinion": null,
+   "opinion_note": null,
+   "quote": "To survive a motion to dismiss, a complaint must contain sufficient factual matter, accepted as true, to “state a claim to relief that is plausible on its face.” Id., at 570 .",
+   "support": {
+    "relation": "supports",
+    "confidence": 1
+   },
+   "flags": [],
+   "citator_checked": true,
+   "url": "https://www.courtlistener.com/opinion/145875/ashcroft-v-iqbal/",
+   "check_url": "/?cite=Ashcroft%20v.%20Iqbal%2C%20556%20U.S.%20662%20%282009%29#check",
+   "open_label": "Read the opinion",
+   "check_label": "Check this citation",
+   "rank_label": null,
+   "language": "en"
+  },
+  {
+   "rank": 3,
+   "retrieval_rank": 2,
+   "reference": "Greg Landers v. Quality Communications, Inc., 771 F.3d 638 (9th Cir. 2014)",
+   "cite": "Greg Landers v. Quality Communications, Inc., 771 F.3d 638 (9th Cir. 2014)",
+   "cluster_id": 2750494,
+   "case_name": "Greg Landers v. Quality Communications, Inc.",
+   "cites": [
+    "771 F.3d 638",
+    "23 Wage & Hour Cas.2d (BNA) 1366",
+    "90 Fed. R. Serv. 3d 250"
+   ],
+   "date": "2014-11-12",
+   "date_display": "2014-11-12",
+   "year": "2014",
+   "court": "ca9",
+   "court_name": "Court of Appeals for the Ninth Circuit",
+   "authority": "own_circuit",
+   "tier": 1,
+   "authority_label": "Binding here",
+   "binding": true,
+   "passage": "This requirement of plausibility was reinforced in Iqbal. See 556 U.S. at 678 (explaining that to satisfy Rule 8(a)(2), “a complaint must contain sufficient factual matter, accepted as true, to state ...",
+   "passage_kind": "judged_paragraph",
+   "passage_label": "The passage we matched",
+   "context": {
+    "before": "Rule 8(a)(2) of the Federal Rules of Civil Procedure requires that each claim in a pleading be supported by “a short and plain statement of the claim showing th...",
+    "after": "In evaluating whether a complaint states a plausible claim for relief, we rely on “judicial experience and common sense” to determine whether the factual allega..."
+   },
+   "context_label": "Show the paragraphs before and after",
+   "opinion": null,
+   "opinion_note": null,
+   "quote": "See 556 U.S. at 678 (explaining that to satisfy Rule 8(a)(2), “a complaint must contain sufficient factual matter, accepted as true, to state a claim to relief that is plausible on its face”) (citation and internal quotation marks omitted). A claim for relief is plausible on its face “when the plaintiff pleads factual content that allows the court to draw the reasonable inference that the defendant is liable for the misconduct alleged. . . .”",
+   "support": {
+    "relation": "supports",
+    "confidence": 1
+   },
+   "flags": [],
+   "citator_checked": true,
+   "url": "https://www.courtlistener.com/opinion/2750494/greg-landers-v-quality-communications-inc/",
+   "check_url": "/?cite=Greg%20Landers%20v.%20Quality%20Communications%2C%20Inc.%2C%20771%20F.3d%20638%20%289th%20Cir.%202014%29#check",
+   "open_label": "Read the opinion",
+   "check_label": "Check this citation",
+   "rank_label": null,
+   "language": "en"
+  }
+ ],
+ "not_shown": [],
+ "counts": {
+  "retrieved": 175,
+  "judged": 10,
+  "verified": 9,
+  "shown": 3,
+  "not_shown": 0,
+  "not_checked": 0,
+  "errors": 0
+ },
+ "about": "How we build this list: we search the sentences in which federal appellate courts and the Supreme Court cite a case, and the cases' own text. A judgment model then reads the opinion of the court in each of the top 10 candidates. We show a case only when the model finds a passage in it that states your sentence, at confidence 0.8 or higher. We leave out cases that a later court overruled or reversed.",
+ "method": {
+  "name": "rrf+judge v2 (set C settings)",
+  "gate": true,
+  "authority_order": true,
+  "widening": 0,
+  "citator": true,
+  "candidates": 10,
+  "shown": 3,
+  "support_threshold": 0.8,
+  "judge_timeout_s": 8.0,
+  "budget_s": 15.0,
+  "engine": "0.7.0",
+  "measured": {
+   "set": "C",
+   "date": "2026-09-26",
+   "engine": "0.7.0",
+   "shown": 73,
+   "supports": 59,
+   "partial": 13,
+   "wrong": 1,
+   "sentences": 50,
+   "sentences_with_support": 23,
+   "supports_ci95": [
+    70,
+    88
+   ],
+   "readers": "two blind model readers per item, a third on the one disagreement",
+   "source": "citation-bench PROGRESS.md Phase 8, round 3, set C"
+  }
+ },
+ "k": 3,
+ "example": "A complaint must contain sufficient factual matter, accepted as true, to state a claim to relief that is plausible on its face.",
+ "timing": {
+  "retrieval_s": 0.21,
+  "judge_s": 0.55,
+  "citator_s": 0.22,
+  "total_s": 0.98,
+  "judge_calls": 11
+ },
+ "plan": "firm",
+ "elapsed_s": 1.2
+}

@@ -484,3 +484,15 @@ describe("briefs_format", () => {
     expect(lines.filter((l) => /^\.\.\. and \d+ more new flags\.$/.test(l))).toHaveLength(1);
   });
 });
+
+
+describe("saved-brief times", () => {
+  it("formats the API's Unix seconds as a UTC date, and still reads ISO strings", async () => {
+    const { formatBriefList } = await import("../src/briefs_format.js");
+    const out = formatBriefList({ briefs: [{ id: 1, title: "T", updated_at: 1790621382.897938, last_checked_at: 1790621382.897938, n_citations: 0, summary: {}, versions: 1 } as any] } as any);
+    expect(out).toContain("Saved 2026-09-28 18:49 UTC, last checked 2026-09-28 18:49 UTC");
+    expect(out).not.toContain("1790621382");
+    const iso = formatBriefList({ briefs: [{ id: 2, title: "U", updated_at: "2026-09-28T18:49:42Z", n_citations: 0, summary: {}, versions: 1 } as any] } as any);
+    expect(iso).toContain("Saved 2026-09-28 18:49 UTC");
+  });
+});

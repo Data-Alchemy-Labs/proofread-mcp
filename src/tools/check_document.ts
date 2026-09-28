@@ -13,11 +13,11 @@ export const checkDocument = defineTool({
   name: "check_document",
   title: "Check legal citations in a file",
   description:
-    "Check every case citation in a document on disk (PDF, DOCX, TXT or Markdown, up to 10 MB) against proofread.law's register of about 10 million US court opinions. " +
+    "Check every case citation in a document on disk (PDF, DOCX, TXT or Markdown, up to 10 MB) against proofread.law's registers: about 10 million US court opinions (CourtListener bulk data) and 1.2 million Swiss decisions (BGE/ATF/DTF, Federal Supreme Court dockets, the federal courts and the 26 cantons). The jurisdiction is detected from the text; a Swiss report comes back in the text's language (German, French or Italian). " +
     "The file is read here and uploaded to proofread.law, which extracts the text in memory, checks it and discards it. " +
     "Returns the same compact result as check_citations: coverage statement, counts per tier, one line per red (check this) or orange (cannot verify) row, " +
     "the number of citations found, and a report id for render_report. " +
-    "Scanned PDFs without a text layer, encrypted PDFs and legacy .doc files cannot be read; .docx needs a paid plan. " +
+    "Scanned PDFs without a text layer, encrypted PDFs and legacy .doc files cannot be read. " +
     LIMITS_NOTE + " " + DEEP_NOTE + " " + KEY_NOTE,
   inputSchema: {
     path: z.string().min(1).describe("Absolute path to a .pdf, .docx, .txt or .md file on this machine."),

@@ -3,7 +3,7 @@ import { ProofreadError } from "./errors.js";
 import { readSseReport } from "./sse.js";
 import type { Brief, BriefList, BriefVersion, CheckoutLink, Coverage, CoverageCh, Report, ResolveBatch, ResolveResult, Row, SavedBrief, SignupResult, SuggestAnswer, SuggestDomain, SuggestJurisdiction, SuggestLang, UpdatedBrief } from "./types.js";
 
-export const USER_AGENT = "proofread-mcp/0.4.0 (+https://github.com/Data-Alchemy-Labs/proofread-mcp)";
+export const USER_AGENT = "proofread-mcp/0.4.1 (+https://github.com/Data-Alchemy-Labs/proofread-mcp)";
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 export const MAX_BATCH_CITES = 500;
 /** A saved brief's id as it goes into a URL path: letters, digits, hyphens, underscores (no dots, so never `..`). */

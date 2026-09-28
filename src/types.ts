@@ -174,7 +174,7 @@ export type BriefSummary = Partial<Summary>;
 
 export interface BriefVersionInfo {
   v: number;
-  created_at?: string;
+  created_at?: string | number;
   summary?: BriefSummary | null;
 }
 
@@ -182,9 +182,9 @@ export interface BriefVersionInfo {
 export interface BriefListItem {
   id: string;
   title?: string | null;
-  created_at?: string;
-  updated_at?: string;
-  last_checked_at?: string | null;
+  created_at?: string | number;
+  updated_at?: string | number;
+  last_checked_at?: string | number | null;
   n_citations?: number;
   summary?: BriefSummary | null;
   versions?: number | BriefVersionInfo[];
@@ -201,8 +201,8 @@ export interface BriefList {
 export interface SavedBrief {
   id: string;
   title?: string | null;
-  created_at?: string;
-  updated_at?: string;
+  created_at?: string | number;
+  updated_at?: string | number;
   summary?: BriefSummary | null;
   report: Report;
   [key: string]: unknown;
@@ -215,8 +215,8 @@ export interface Brief {
   text?: string;
   report?: Report | null;
   summary?: BriefSummary | null;
-  created_at?: string;
-  updated_at?: string;
+  created_at?: string | number;
+  updated_at?: string | number;
   versions?: BriefVersionInfo[];
   [key: string]: unknown;
 }
@@ -238,7 +238,7 @@ export interface UpdatedBrief extends Brief {
 /** GET /v1/briefs/{id}/versions/{v}. */
 export interface BriefVersion {
   v: number;
-  created_at?: string;
+  created_at?: string | number;
   text: string;
   summary?: BriefSummary | null;
 }

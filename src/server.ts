@@ -4,7 +4,7 @@ import { configFromEnv, type Config } from "./config.js";
 import { tools } from "./tools/index.js";
 
 export const SERVER_NAME = "proofread-mcp";
-export const SERVER_VERSION = "0.4.0";
+export const SERVER_VERSION = "0.4.1";
 
 export const INSTRUCTIONS =
   "proofread.law checks case citations against open registers: about 10 million US court opinions, and 1.1 million Swiss decisions (BGE/ATF/DTF, Federal Supreme Court dockets, the federal courts and all 26 cantons). "

@@ -8,7 +8,7 @@ export const checkCitations = defineTool({
   name: "check_citations",
   title: "Check legal citations in text",
   description:
-    "Check every case citation in a text against proofread.law's register of about 10 million US court opinions (CourtListener bulk data). " +
+    "Check every case citation in a text against proofread.law's registers: about 10 million US court opinions (CourtListener bulk data) and 1.2 million Swiss decisions (BGE/ATF/DTF, Federal Supreme Court dockets, the federal courts and the 26 cantons). The jurisdiction is detected from the text; a Swiss report comes back in the text's language (German, French or Italian). " +
     "Use it on a draft brief, memo, letter or any prose that cites cases, before the citations are relied on. " +
     "Returns the coverage statement, counts per tier, one line per row that needs a human " +
     "(red = check this: the register holds something concrete that disagrees, such as a different case at that citation or quoted words not in the opinion; " +

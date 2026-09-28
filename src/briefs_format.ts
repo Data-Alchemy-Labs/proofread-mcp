@@ -205,9 +205,12 @@ function versionCount(versions: BriefListItem["versions"]): number | undefined {
 }
 
 /** `2026-09-24T10:00:00Z` reads as `2026-09-24 10:00 UTC`; anything else is shown as sent. */
-function when(iso: string): string {
+/** A saved-brief time as 'YYYY-MM-DD HH:MM UTC'. The API sends Unix seconds (e.g. 1790621382.89); ISO strings are read too. */
+function when(t: string | number): string {
+  const secs = typeof t === "number" ? t : /^\d+(?:\.\d+)?$/.test(t) ? Number(t) : NaN;
+  const iso = Number.isFinite(secs) ? new Date(secs * 1000).toISOString() : String(t);
   const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?(Z|\+00:00)$/.exec(iso);
-  return m ? `${m[1]} ${m[2]} UTC` : iso;
+  return m ? `${m[1]} ${m[2]} UTC` : String(t);
 }
 
 function plural(n: number, noun: string): string {
